@@ -5,35 +5,33 @@ import { useNoteStore } from '../store/useNoteStore';
 import NoteCard from '../components/NoteCard/NoteCard';
 import { useToolbarStore } from '../store/useToolbarStore';
 import { useNotes } from '../hooks/useNotes';
-import { CursorOverlay } from '../components/CursorOverlay/CursorOverlay';
+import { useNoteSocketListeners } from '../hooks/useNoteSocketListeners';
+import { CURSOR_MAP } from '../components/CursorOverlay/constants';
 
 function CanvasComponent() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const localCanvasRef = useRef<HTMLCanvasElement>(null);
   const { notes } = useNoteStore();
   const { tool } = useToolbarStore();
-  const { startDraw, draw, stopDraw } = useDrawing(canvasRef);
-  const { handleCanvasClick } = useNotes(canvasRef);
+  const { startDraw, draw, stopDraw } = useDrawing(localCanvasRef);
+  const { handleCanvasClick } = useNotes(localCanvasRef);
 
-  const CURSOR_MAP = {
-    note: 'crosshair',
-    draw: 'none',
-    eraser: 'none',
-  };
+  useNoteSocketListeners();
+
+  const cursorStyle = tool !== 'none' ? CURSOR_MAP[tool] : 'default';
 
   return (
     <div className="relative w-[1500px] h-[1200px]">
       <canvas
-        ref={canvasRef}
+        ref={localCanvasRef}
         width={1500}
         height={1200}
-        style={{ cursor: tool ? CURSOR_MAP[tool] : 'default' }}
+        style={{ cursor: cursorStyle, position: 'absolute', top: 0, left: 0, zIndex: 2 }}
         onPointerDown={startDraw}
         onPointerMove={draw}
         onPointerUp={stopDraw}
         onPointerLeave={stopDraw}
         onClick={handleCanvasClick}
       />
-      {(tool === 'draw' || tool === 'eraser') && <CursorOverlay />}
       {notes.map((note) => (
         <NoteCard key={note.id} {...note} />
       ))}
@@ -58,12 +56,13 @@ function CanvasWrapper() {
     }
   }, []);
 
-  if (!isReady)
+  if (!isReady || typeof window === 'undefined') {
     return (
       <div className="w-full h-full flex items-center justify-center text-lg font-bold text-gray-600 select-none">
         Ładowanie...
       </div>
     );
+  }
 
   return <CanvasComponent />;
 }

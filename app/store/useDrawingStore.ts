@@ -1,5 +1,13 @@
 import { create } from 'zustand';
 
+interface Stroke {
+  points: { x: number; y: number }[];
+  strokeColor: string;
+  lineWidth: number;
+  tool: string;
+  id: string;
+}
+
 interface DrawingStore {
   strokeColor: string;
   lineWidth: number;
@@ -9,6 +17,10 @@ interface DrawingStore {
   ctxRef: CanvasRenderingContext2D | null;
   setCanvasRef: (canvas: HTMLCanvasElement) => void;
   setCtxRef: (ctx: CanvasRenderingContext2D) => void;
+  strokes: Stroke[];
+  addStroke: (stroke: Stroke) => void;
+  removeStroke: (id: string) => void;
+  clearStrokes: () => void;
 }
 
 export const useDrawingStore = create<DrawingStore>((set) => ({
@@ -20,4 +32,8 @@ export const useDrawingStore = create<DrawingStore>((set) => ({
   ctxRef: null,
   setCanvasRef: (canvas) => set({ canvasRef: canvas }),
   setCtxRef: (ctx) => set({ ctxRef: ctx }),
+  strokes: [],
+  addStroke: (stroke) => set((state) => ({ strokes: [...state.strokes, stroke] })),
+  removeStroke: (id) => set((state) => ({ strokes: state.strokes.filter((s) => s.id !== id) })),
+  clearStrokes: () => set({ strokes: [] }),
 }));

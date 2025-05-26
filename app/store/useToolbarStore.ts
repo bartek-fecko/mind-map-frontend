@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type Tool = 'draw' | 'note' | 'eraser' | null;
+type Tool = 'draw' | 'note' | 'eraser' | "none";
 
 type ToolbarStore = {
   tool: Tool;

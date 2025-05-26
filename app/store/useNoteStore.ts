@@ -1,12 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-
-type Note = {
-  id: string;
-  x: number;
-  y: number;
-  content: string;
-};
+import { Note } from '../types/notes';
 
 type NoteStore = {
   notes: Note[];
@@ -15,16 +9,19 @@ type NoteStore = {
   setNotes: (notes: Note[]) => void;
   updateNote: (id: string, changes: Partial<Note>) => void;
   removeNote: (id: string) => void;
-  restoreNote: (id: string) => void;
+  restoreNote: (id: string | null, note?: Note) => void;
+  replaceNoteId: (tempId: string, newId: string) => void;
+  removeAllNotes: () => void;
 };
 
 export const useNoteStore = create<NoteStore>((set, get) => ({
   notes: [],
   removedNotes: [],
   addNote: (note) => {
-    const newNote = { id: uuidv4(), x: 100, y: 100, content: '', ...note };
+    const newId = uuidv4();
+    const newNote = { id: newId, x: '100', y: '100', content: '', ...note };
     set((state) => ({
-      notes: [...state.notes, newNote],
+      notes: [...state.notes.filter((n) => n.id !== newNote.id), newNote],
     }));
     return newNote;
   },
@@ -39,17 +36,26 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
       if (!noteToRemove) return state;
       return {
         notes: state.notes.filter((n) => n.id !== id),
-        removedNotes: [...state.removedNotes, noteToRemove],
+        removedNotes: [...state.removedNotes.filter((n) => n.id !== id), noteToRemove],
       };
     }),
-  restoreNote: (id) => {
+  restoreNote: (id, note) => {
     const { removedNotes, notes } = get();
     const noteToRestore = removedNotes.find((n) => n.id === id);
-    if (!noteToRestore) return;
-
+    const noteToAdd = noteToRestore ?? note;
+    if (!noteToAdd) return;
     set({
-      notes: [...notes, noteToRestore],
+      notes: [...notes.filter((n) => n.id !== noteToAdd.id), noteToAdd],
       removedNotes: removedNotes.filter((n) => n.id !== id),
     });
+  },
+  replaceNoteId: (tempId, newId) => {
+    set((state) => ({
+      notes: state.notes.map((note) => (note.id === tempId ? { ...note, id: newId } : note)),
+      removedNotes: state.removedNotes.map((note) => (note.id === tempId ? { ...note, id: newId } : note)),
+    }));
+  },
+  removeAllNotes: () => {
+    set(() => ({ notes: [], removedNotes: [] }));
   },
 }));

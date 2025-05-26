@@ -2,7 +2,8 @@ import { create } from 'zustand';
 
 interface HistoryAction {
   type: string;
-  payload?: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: Record<string, any>;
   undo: () => void;
   redo: () => void;
 }
