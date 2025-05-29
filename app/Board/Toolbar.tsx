@@ -92,15 +92,18 @@ export default function Toolbar() {
           <label htmlFor="lineWidth" className="text-sm font-medium text-gray-700 block mb-1">
             Line Width
           </label>
-          <input
-            id="lineWidth"
-            type="number"
-            min="1"
-            max="50"
-            defaultValue={lineWidth}
-            className="w-full border rounded-md px-2 py-1"
-            onChange={(e) => setLineWidth(parseInt(e.target.value))}
-          />
+          <div className="flex items-center space-x-3">
+            <input
+              id="lineWidth"
+              type="range"
+              min="3"
+              max="10"
+              value={lineWidth}
+              className="w-full"
+              onChange={(e) => setLineWidth(parseInt(e.target.value))}
+            />
+            <span className="w-8 text-center text-gray-700 font-medium">{lineWidth}</span>
+          </div>
         </div>
 
         {/* History */}

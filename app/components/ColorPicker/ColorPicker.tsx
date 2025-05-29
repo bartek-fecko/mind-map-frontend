@@ -1,18 +1,16 @@
 'use client';
-import { useDrawingStore } from '../../store/useDrawingStore';
 import { useEffect, useState } from 'react';
+import { useDrawingStore } from '../../store/useDrawingStore';
+import { useDebounce } from '../../utils/useDebounce';
 
 export default function ColorPicker() {
   const { setStrokeColor } = useDrawingStore();
   const [color, setColor] = useState('#000000');
+  const debouncedColor = useDebounce(color, 300);
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setStrokeColor(color);
-    }, 1000);
-
-    return () => clearTimeout(handler);
-  }, [color, setStrokeColor]);
+    setStrokeColor(debouncedColor);
+  }, [debouncedColor, setStrokeColor]);
 
   return (
     <div>
@@ -23,6 +21,7 @@ export default function ColorPicker() {
         id="stroke"
         type="color"
         className="w-full h-10 border rounded-md"
+        value={color}
         onChange={(e) => setColor(e.target.value)}
       />
     </div>
