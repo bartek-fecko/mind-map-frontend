@@ -7,13 +7,24 @@ import { useToolbarStore } from '../store/useToolbarStore';
 import { useNotes } from '../hooks/useNotes';
 import { useNoteSocketListeners } from '../hooks/useNoteSocketListeners';
 import { CURSOR_MAP } from '../components/CursorOverlay/constants';
+import { useDrawingStore } from '../store/useDrawingStore';
 
 function CanvasComponent() {
   const localCanvasRef = useRef<HTMLCanvasElement>(null);
   const { notes } = useNoteStore();
   const { tool } = useToolbarStore();
-  const { startDraw, draw, stopDraw } = useDrawing(localCanvasRef);
+  const { startDraw, draw, stopDraw } = useDrawing();
   const { handleCanvasClick } = useNotes(localCanvasRef);
+
+  useEffect(() => {
+    if (localCanvasRef.current) {
+      const store = useDrawingStore.getState();
+      store.setCanvasRef(localCanvasRef.current);
+      if (!store.workerRef) {
+        store.initWorker();
+      }
+    }
+  }, []);
 
   useNoteSocketListeners();
 
@@ -22,6 +33,7 @@ function CanvasComponent() {
   return (
     <div className="relative w-[1500px] h-[1200px]">
       <canvas
+        id="canvas"
         ref={localCanvasRef}
         width={1500}
         height={1200}

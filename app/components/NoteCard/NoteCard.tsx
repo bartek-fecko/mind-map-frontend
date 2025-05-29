@@ -2,6 +2,7 @@ import { FocusEvent } from 'react';
 import { useNoteStore } from '../../store/useNoteStore';
 import { useSocket } from '@/app/providers/SocketProvider';
 import { NotesSocketEvents } from '@/app/store/socketEvents';
+import { useHistoryStore } from '@/app/store/useHistoryStore';
 
 type Props = {
   id: string;
@@ -12,20 +13,34 @@ type Props = {
 
 export default function NoteCard({ id, x, y, content }: Props) {
   const { updateNote } = useNoteStore();
-  const { socket, queueOfflineEvent } = useSocket();
+  const { socket } = useSocket();
+
+  const updateNoteContent = (id: string, content: string) => {
+    const currentNote = useNoteStore.getState().notes.find((note) => note.id === id);
+    if (!currentNote) return;
+
+    const prevNote = JSON.parse(JSON.stringify(currentNote));
+    const newNote = { ...prevNote, content };
+
+    updateNote(id, newNote);
+    socket.emit(NotesSocketEvents.UPDATE, newNote);
+
+    useHistoryStore.getState().pushAction({
+      type: 'note-update',
+      payload: { id, content },
+      undo: () => {
+        updateNote(id, JSON.parse(JSON.stringify(prevNote)));
+        socket.emit(NotesSocketEvents.UPDATE, prevNote);
+      },
+      redo: () => {
+        updateNote(id, JSON.parse(JSON.stringify(newNote)));
+        socket.emit(NotesSocketEvents.UPDATE, newNote);
+      },
+    });
+  };
 
   const handleBlur = (e: FocusEvent<HTMLDivElement>) => {
-    const newNote = { id, x: `${x}`, y: `${y}`, content: e.currentTarget.textContent || '' };
-    updateNote(id, newNote);
-
-    if (socket.connected) {
-      socket.emit(NotesSocketEvents.UPDATE, newNote);
-    } else {
-      queueOfflineEvent({
-        type: NotesSocketEvents.UPDATE,
-        payload: newNote,
-      });
-    }
+    updateNoteContent(id, e.currentTarget.textContent || '');
   };
 
   return (

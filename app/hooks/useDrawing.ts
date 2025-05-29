@@ -1,41 +1,30 @@
-import { RefObject, useEffect, useRef, useState, useCallback } from 'react';
-import { useDrawingStore } from '../store/useDrawingStore';
+import { useEffect, useRef, useState } from 'react';
+import { Stroke, useDrawingStore } from '../store/useDrawingStore';
 import { useToolbarStore } from '../store/useToolbarStore';
 import { useSocket } from '../providers/SocketProvider';
 import { useHistoryStore } from '../store/useHistoryStore';
+import { useNoteStore } from '../store/useNoteStore';
 import { v4 as uuidv4 } from 'uuid';
-import { DrawingSocketEvents } from '../store/socketEvents';
+import { DrawingSocketEvents, NotesSocketEvents } from '../store/socketEvents';
 
-export function useDrawing(canvasRef: RefObject<HTMLCanvasElement | null>) {
-  const workerRef = useRef<Worker | null>(null);
+export function useDrawing() {
   const [isPainting, setIsPainting] = useState(false);
+  const [isRedrawing, setIsRedrawing] = useState(false);
   const points = useRef<{ x: number; y: number }[]>([]);
   const strokeId = useRef<string | null>(null);
 
-  const { strokeColor, lineWidth } = useDrawingStore();
-  const { tool } = useToolbarStore();
   const { socket } = useSocket();
-
+  const canvasRef = useDrawingStore((s) => s.canvasRef);
+  const workerRef = useDrawingStore((s) => s.workerRef);
+  const strokeColor = useDrawingStore((s) => s.strokeColor);
+  const lineWidth = useDrawingStore((s) => s.lineWidth);
   const addStroke = useDrawingStore((s) => s.addStroke);
   const removeStroke = useDrawingStore((s) => s.removeStroke);
-  const strokes = useDrawingStore((s) => s.strokes);
+  const clearStrokes = useDrawingStore((s) => s.clearStrokes);
+  const tool = useToolbarStore((s) => s.tool);
+  const setNotes = useNoteStore((s) => s.setNotes);
   const pushAction = useHistoryStore((s) => s.pushAction);
-
-  // Init worker
-  useEffect(() => {
-    if (!canvasRef.current || workerRef.current) return;
-
-    const canvas = canvasRef.current;
-    const offscreen = canvas.transferControlToOffscreen();
-    const worker = new Worker(new URL('../workers/drawingWorker.ts', import.meta.url));
-    worker.postMessage({ canvas: offscreen }, [offscreen]);
-    workerRef.current = worker;
-
-    return () => {
-      worker.terminate();
-      workerRef.current = null;
-    };
-  }, [canvasRef]);
+  const clearHistory = useHistoryStore((s) => s.clear);
 
   const getMousePos = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current!.getBoundingClientRect();
@@ -48,16 +37,19 @@ export function useDrawing(canvasRef: RefObject<HTMLCanvasElement | null>) {
     lineWidth: number;
     tool: string;
   }) => {
-    workerRef.current?.postMessage({ drawCommands: stroke });
+    workerRef?.postMessage({ drawCommands: stroke });
   };
 
-  const redrawAll = useCallback(
-    (strokeList: typeof strokes) => {
-      workerRef.current?.postMessage({ clear: true });
-      strokeList.forEach(drawToWorker);
-    },
-    [strokes],
-  );
+  const redrawAll = (strokeList: Stroke[]) => {
+    setIsRedrawing(true);
+    workerRef?.postMessage({ clear: true });
+
+    strokeList.forEach(drawToWorker);
+
+    setTimeout(() => {
+      setIsRedrawing(false);
+    }, 50);
+  };
 
   const startDraw = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!['draw', 'eraser'].includes(tool)) return;
@@ -91,28 +83,19 @@ export function useDrawing(canvasRef: RefObject<HTMLCanvasElement | null>) {
     addStroke(newStroke);
     drawToWorker(newStroke);
 
-    // Emit to socket
     socket.emit(DrawingSocketEvents.ADD_STROKE, newStroke);
 
-    // History
     pushAction({
       type: 'drawStroke',
       payload: newStroke,
       undo: () => {
         removeStroke(newStroke.id);
-
-        const currentStrokes = useDrawingStore.getState().strokes;
-        redrawAll(currentStrokes.filter((s) => s.id !== newStroke.id));
-
+        redrawAll(useDrawingStore.getState().strokes.filter((s) => s.id !== newStroke.id));
         socket.emit(DrawingSocketEvents.REMOVE_STROKE, newStroke.id);
       },
       redo: () => {
-        const currentStrokes = useDrawingStore.getState().strokes;
-        const updated = [...currentStrokes, newStroke];
-
         addStroke(newStroke);
-        redrawAll(updated);
-
+        redrawAll(useDrawingStore.getState().strokes.concat(newStroke));
         socket.emit(DrawingSocketEvents.ADD_STROKE, newStroke);
       },
     });
@@ -120,28 +103,88 @@ export function useDrawing(canvasRef: RefObject<HTMLCanvasElement | null>) {
     points.current = [];
     strokeId.current = null;
   };
+
+  const clearAllDrawings = () => {
+    const previousStrokes = useDrawingStore.getState().strokes.slice();
+
+    clearStrokes();
+    workerRef?.postMessage({ clear: true });
+
+    socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES);
+
+    pushAction({
+      type: 'clearAll',
+      undo: () => {
+        previousStrokes.forEach((stroke) => {
+          useDrawingStore.getState().addStroke(stroke);
+        });
+        redrawAll(previousStrokes);
+        previousStrokes.forEach((stroke) => {
+          socket.emit(DrawingSocketEvents.ADD_STROKE, stroke);
+        });
+      },
+      redo: () => {
+        clearStrokes();
+        redrawAll([]);
+        socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES);
+      },
+    });
+  };
+
+  const clearAll = (broadcast: boolean = true) => {
+    setNotes([]);
+    clearStrokes();
+    clearHistory();
+    workerRef?.postMessage({ clear: true });
+    if (broadcast) {
+      socket.emit(NotesSocketEvents.REMOVE_ALL);
+      socket.emit(DrawingSocketEvents.REMOVE_ALL);
+    }
+  };
+
   useEffect(() => {
     if (!socket) return;
 
     socket.on(DrawingSocketEvents.ADD_STROKE, (stroke) => {
+      if (isRedrawing) return;
+
+      // Ignore if stroke already exists locally (to avoid double drawing)
+      if (useDrawingStore.getState().strokes.find((s) => s.id === stroke.id)) return;
+
       addStroke(stroke);
       drawToWorker(stroke);
     });
 
     socket.on(DrawingSocketEvents.REMOVE_STROKE, (strokeId) => {
+      if (isRedrawing) return;
+
       removeStroke(strokeId);
       redrawAll(useDrawingStore.getState().strokes);
+    });
+
+    socket.on(DrawingSocketEvents.REMOVE_ALL, () => {
+      clearAll(false);
+    });
+
+    socket.on(DrawingSocketEvents.REMOVE_ALL_STROKES, () => {
+      clearStrokes();
+      workerRef?.postMessage({ clear: true });
+      redrawAll([]);
     });
 
     return () => {
       socket.off(DrawingSocketEvents.ADD_STROKE);
       socket.off(DrawingSocketEvents.REMOVE_STROKE);
+      socket.off(DrawingSocketEvents.REMOVE_ALL);
+      socket.off(DrawingSocketEvents.REMOVE_ALL_STROKES);
     };
-  }, [socket]);
+  }, [socket, workerRef, isRedrawing]);
 
   return {
     startDraw,
     draw,
     stopDraw,
+    clearAll,
+    clearAllDrawings,
   };
 }

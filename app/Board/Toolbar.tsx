@@ -12,15 +12,18 @@ import { useDrawingStore } from '../store/useDrawingStore';
 import { useToolbarStore } from '../store/useToolbarStore';
 import ColorPicker from '../components/ColorPicker/ColorPicker';
 import { useHistoryStore } from '../store/useHistoryStore';
-import { useClearCanvas } from '../hooks/useClearCanvas';
 import { useNotes } from '../hooks/useNotes';
 import { useRef } from 'react';
+import { useDrawing } from '../hooks/useDrawing';
 
 export default function Toolbar() {
-  const { setLineWidth, lineWidth } = useDrawingStore();
-  const { tool, setTool } = useToolbarStore();
-  const { undo, redo } = useHistoryStore();
-  const { clearDrawings, clearAll } = useClearCanvas();
+  const setLineWidth = useDrawingStore((s) => s.setLineWidth);
+  const lineWidth = useDrawingStore((s) => s.lineWidth);
+  const tool = useToolbarStore((s) => s.tool);
+  const setTool = useToolbarStore((s) => s.setTool);
+  const undo = useHistoryStore((s) => s.undo);
+  const redo = useHistoryStore((s) => s.redo);
+  const { clearAll, clearAllDrawings } = useDrawing();
   const { removeAllNotes } = useNotes(useRef(null));
 
   const clearBoard = () => {
@@ -58,7 +61,7 @@ export default function Toolbar() {
           </button>
 
           <button
-            onClick={() => clearDrawings()}
+            onClick={() => clearAllDrawings()}
             className="p-1 rounded-md hover:bg-gray-100 cursor-pointer flex items-center justify-center border-2 border-transparent hover:border-gray-300"
             aria-label="Clear Drawings"
             title="Wyczyść rysunki"

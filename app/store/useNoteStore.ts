@@ -9,12 +9,10 @@ type NoteStore = {
   setNotes: (notes: Note[]) => void;
   updateNote: (id: string, changes: Partial<Note>) => void;
   removeNote: (id: string) => void;
-  restoreNote: (id: string | null, note?: Note) => void;
-  replaceNoteId: (tempId: string, newId: string) => void;
   removeAllNotes: () => void;
 };
 
-export const useNoteStore = create<NoteStore>((set, get) => ({
+export const useNoteStore = create<NoteStore>((set) => ({
   notes: [],
   removedNotes: [],
   addNote: (note) => {
@@ -39,22 +37,6 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
         removedNotes: [...state.removedNotes.filter((n) => n.id !== id), noteToRemove],
       };
     }),
-  restoreNote: (id, note) => {
-    const { removedNotes, notes } = get();
-    const noteToRestore = removedNotes.find((n) => n.id === id);
-    const noteToAdd = noteToRestore ?? note;
-    if (!noteToAdd) return;
-    set({
-      notes: [...notes.filter((n) => n.id !== noteToAdd.id), noteToAdd],
-      removedNotes: removedNotes.filter((n) => n.id !== id),
-    });
-  },
-  replaceNoteId: (tempId, newId) => {
-    set((state) => ({
-      notes: state.notes.map((note) => (note.id === tempId ? { ...note, id: newId } : note)),
-      removedNotes: state.removedNotes.map((note) => (note.id === tempId ? { ...note, id: newId } : note)),
-    }));
-  },
   removeAllNotes: () => {
     set(() => ({ notes: [], removedNotes: [] }));
   },
