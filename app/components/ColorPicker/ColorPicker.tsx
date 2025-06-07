@@ -20,7 +20,7 @@ export default function ColorPicker() {
       <input
         id="stroke"
         type="color"
-        className="w-full h-10 border rounded-md"
+        className="w-full h-10 border rounded-md cursor-pointer"
         value={color}
         onChange={(e) => setColor(e.target.value)}
       />

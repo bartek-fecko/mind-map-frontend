@@ -5,7 +5,7 @@ import { useSocket } from '../providers/SocketProvider';
 import { useHistoryStore } from '../store/useHistoryStore';
 import { useNoteStore } from '../store/useNoteStore';
 import { v4 as uuidv4 } from 'uuid';
-import { DrawingSocketEvents, NotesSocketEvents } from '../store/socketEvents';
+import { DrawingSocketEvents, NotesSocketEvents } from '../types/socketEvents';
 
 export function useDrawing() {
   const [isPainting, setIsPainting] = useState(false);
@@ -106,6 +106,7 @@ export function useDrawing() {
 
   const clearAllDrawings = () => {
     const previousStrokes = useDrawingStore.getState().strokes.slice();
+    if (previousStrokes.length === 0) return;
 
     clearStrokes();
     workerRef?.postMessage({ clear: true });

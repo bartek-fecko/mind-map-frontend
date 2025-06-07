@@ -15,6 +15,7 @@ import { useHistoryStore } from '../store/useHistoryStore';
 import { useNotes } from '../hooks/useNotes';
 import { useRef } from 'react';
 import { useDrawing } from '../hooks/useDrawing';
+import EmojiPicker from '../components/EmojiPicker/EmojiPicker';
 
 export default function Toolbar() {
   const setLineWidth = useDrawingStore((s) => s.setLineWidth);
@@ -55,32 +56,30 @@ export default function Toolbar() {
             onClick={() => setTool('eraser')}
             className={`${buttonBaseClasses} ${tool === 'eraser' ? 'border-blue-500 bg-blue-100' : buttonHoverClasses}`}
             aria-pressed={tool === 'eraser'}
-            aria-label="gumka"
           >
             <BackspaceIcon className={`w-6 h-6 ${tool === 'eraser' ? 'text-blue-600' : 'text-gray-600'}`} />
           </button>
 
           <button
             onClick={() => clearAllDrawings()}
-            className="p-1 rounded-md hover:bg-gray-100 cursor-pointer flex items-center justify-center border-2 border-transparent hover:border-gray-300"
-            aria-label="Clear Drawings"
-            title="Wyczyść rysunki"
+            className="p-1 rounded-md hover:bg-gray-100 flex items-center justify-center border-2 border-transparent hover:border-gray-300"
           >
             <TrashIcon className="w-6 h-6 text-red-600" />
           </button>
         </li>
 
         {/* Notes */}
-        <li>
+        <li className="flex space-x-2">
           <button
             onClick={() => setTool('note')}
-            className={`${buttonBaseClasses} flex justify-start flex-1 ${
-              tool === 'note' ? 'border-blue-500 bg-blue-100' : buttonHoverClasses
-            }`}
+            className={`${buttonBaseClasses} ${tool === 'note' ? 'border-blue-500 bg-blue-100' : buttonHoverClasses}`}
             aria-pressed={tool === 'note'}
           >
             <ClipboardIcon className={`w-6 h-6 ${tool === 'note' ? 'text-blue-600' : 'text-gray-600'}`} />
           </button>
+
+          {/*  EmojiPicker */}
+          <EmojiPicker buttonBaseClasses={buttonBaseClasses} buttonHoverClasses={buttonHoverClasses} />
         </li>
       </ul>
 
@@ -99,7 +98,7 @@ export default function Toolbar() {
               min="3"
               max="10"
               value={lineWidth}
-              className="w-full"
+              className="w-full cursor-pointer"
               onChange={(e) => setLineWidth(parseInt(e.target.value))}
             />
             <span className="w-8 text-center text-gray-700 font-medium">{lineWidth}</span>
@@ -110,25 +109,21 @@ export default function Toolbar() {
         <div className="flex space-x-2 pt-4">
           <button
             onClick={undo}
-            className="p-1 border-2 border-transparent rounded-md hover:bg-gray-100 cursor-pointer hover:border-gray-300"
-            aria-label="Undo"
+            className="p-1 border-2 border-transparent rounded-md hover:bg-gray-100 hover:border-gray-300 cursor-pointer"
           >
             <ArrowUturnLeftIcon className="w-6 h-6 text-gray-700" />
           </button>
 
           <button
             onClick={redo}
-            className="p-1 border-2 border-transparent rounded-md hover:bg-gray-100 cursor-pointer hover:border-gray-300"
-            aria-label="Redo"
+            className="p-1 border-2 border-transparent rounded-md hover:bg-gray-100 hover:border-gray-300 cursor-pointer"
           >
             <ArrowUturnRightIcon className="w-6 h-6 text-gray-700" />
           </button>
 
           <button
             onClick={clearBoard}
-            className="p-1 border-2 border-transparent rounded-md hover:bg-gray-100 cursor-pointer hover:border-gray-300"
-            aria-label="Clear All"
-            title="Wyczyść wszystko"
+            className="p-1 border-2 border-transparent rounded-md hover:bg-gray-100 hover:border-gray-300 cursor-pointer"
           >
             <TrashIcon className="w-6 h-6 text-red-600" />
           </button>

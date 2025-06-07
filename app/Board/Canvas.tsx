@@ -8,13 +8,26 @@ import { useNotes } from '../hooks/useNotes';
 import { useNoteSocketListeners } from '../hooks/useNoteSocketListeners';
 import { CURSOR_MAP } from '../components/CursorOverlay/constants';
 import { useDrawingStore } from '../store/useDrawingStore';
+import { useEmoji } from '../hooks/useEmoji';
+import { useEmojiStore } from '../store/useEmojiStore';
+import EmojiIcon from '../components/EmojiIcon/EmojiIcon';
+import ResizableCard from '../components/ResizableCard/ResizableCard';
 
 function CanvasComponent() {
   const localCanvasRef = useRef<HTMLCanvasElement>(null);
-  const { notes } = useNoteStore();
+  const { notes, editModeNoteId } = useNoteStore();
+  const { emojis } = useEmojiStore();
   const { tool } = useToolbarStore();
   const { startDraw, draw, stopDraw } = useDrawing();
-  const { handleCanvasClick } = useNotes(localCanvasRef);
+
+  const { updateNote } = useNotes(localCanvasRef);
+  const { handleCanvasClick: handleNoteClick } = useNotes(localCanvasRef);
+  const { handleCanvasClick: handleEmojiClick } = useEmoji(localCanvasRef);
+
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    handleEmojiClick(e);
+    handleNoteClick(e);
+  };
 
   useEffect(() => {
     if (localCanvasRef.current) {
@@ -31,13 +44,13 @@ function CanvasComponent() {
   const cursorStyle = tool !== 'none' ? CURSOR_MAP[tool] : 'default';
 
   return (
-    <div className="relative w-[1500px] h-[1200px]">
+    <div className={`relative min-w-[2000px] min-h-[1200px] z-2`}>
       <canvas
         id="canvas"
         ref={localCanvasRef}
-        width={1500}
+        width={2000}
         height={1200}
-        style={{ cursor: cursorStyle, position: 'absolute', top: 0, left: 0, zIndex: 2 }}
+        style={{ cursor: cursorStyle, position: 'absolute', top: 0, left: 0 }}
         onPointerDown={startDraw}
         onPointerMove={draw}
         onPointerUp={stopDraw}
@@ -45,7 +58,35 @@ function CanvasComponent() {
         onClick={handleCanvasClick}
       />
       {notes.map((note) => (
-        <NoteCard key={note.id} {...note} />
+        <ResizableCard
+          key={note.id}
+          className="z-3"
+          id={note.id}
+          element={{
+            x: parseInt(note.x),
+            y: parseInt(note.y),
+            width: note.width || 200,
+            height: note.height || 150,
+          }}
+          minWidth={editModeNoteId === note.id ? 600 : undefined}
+          minHeight={editModeNoteId === note.id ? 400 : undefined}
+          onUpdate={(id, updates) => {
+            if (editModeNoteId === note.id) return;
+            updateNote({
+              ...updates,
+              id,
+              x: updates.x?.toString(),
+              y: updates.y?.toString(),
+              width: updates.width,
+              height: updates.height,
+            });
+          }}
+        >
+          <NoteCard {...note} />
+        </ResizableCard>
+      ))}
+      {emojis.map((emoji) => (
+        <EmojiIcon key={emoji.id} {...emoji} />
       ))}
     </div>
   );

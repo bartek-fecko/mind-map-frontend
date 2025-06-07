@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNoteStore } from '../store/useNoteStore';
 import { useSocket } from '../providers/SocketProvider';
-import { NotesSocketEvents } from '../store/socketEvents';
+import { NotesSocketEvents } from '../types/socketEvents';
 import { Note } from '../types/notes';
 
 export const useNoteSocketListeners = () => {
@@ -37,9 +37,11 @@ export const useNoteSocketListeners = () => {
     });
 
     return () => {
+      socket?.off(NotesSocketEvents.GET_ALL);
       socket?.off(NotesSocketEvents.ADD);
       socket?.off(NotesSocketEvents.REMOVE);
       socket?.off(NotesSocketEvents.UPDATE);
+      socket?.off(NotesSocketEvents.REMOVE_ALL);
     };
   }, [addNote, removeNote, socket, updateNote, setNotes, removeAllNotes]);
 };

@@ -14,7 +14,8 @@ const eraserCursor = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height=
 const base64EraserCursor = typeof window !== 'undefined' ? btoa(eraserCursor) : '';
 
 export const CURSOR_MAP = {
-  note: 'crosshair',
   draw: `url("data:image/svg+xml;base64,${base64Cursor}") 12 12, crosshair`,
   eraser: `url("data:image/svg+xml;base64,${base64EraserCursor}") 12 12, crosshair`,
+  note: 'crosshair',
+  emoji: 'crosshair',
 };

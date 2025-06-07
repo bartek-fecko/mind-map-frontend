@@ -1,8 +1,8 @@
-import { FocusEvent } from 'react';
-import { useNoteStore } from '../../store/useNoteStore';
-import { useSocket } from '@/app/providers/SocketProvider';
-import { NotesSocketEvents } from '@/app/store/socketEvents';
-import { useHistoryStore } from '@/app/store/useHistoryStore';
+import { MouseEvent, useRef } from 'react';
+import NoteEditor from './NoteEditor';
+import { useNotes } from '@/app/hooks/useNotes';
+import { useNoteStore } from '@/app/store/useNoteStore';
+import { useToolbarStore } from '@/app/store/useToolbarStore';
 
 type Props = {
   id: string;
@@ -11,47 +11,43 @@ type Props = {
   content: string;
 };
 
-export default function NoteCard({ id, x, y, content }: Props) {
-  const { updateNote } = useNoteStore();
-  const { socket } = useSocket();
+export default function NoteCard({ id, content }: Props) {
+  const { updateNote } = useNotes(useRef(null));
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { editModeNoteId, setEditModeNoteId } = useNoteStore();
+  const isEditMode = editModeNoteId === id;
+  const setTool = useToolbarStore((s) => s.setTool);
 
-  const updateNoteContent = (id: string, content: string) => {
-    const currentNote = useNoteStore.getState().notes.find((note) => note.id === id);
-    if (!currentNote) return;
-
-    const prevNote = JSON.parse(JSON.stringify(currentNote));
-    const newNote = { ...prevNote, content };
-
-    updateNote(id, newNote);
-    socket.emit(NotesSocketEvents.UPDATE, newNote);
-
-    useHistoryStore.getState().pushAction({
-      type: 'note-update',
-      payload: { id, content },
-      undo: () => {
-        updateNote(id, JSON.parse(JSON.stringify(prevNote)));
-        socket.emit(NotesSocketEvents.UPDATE, prevNote);
-      },
-      redo: () => {
-        updateNote(id, JSON.parse(JSON.stringify(newNote)));
-        socket.emit(NotesSocketEvents.UPDATE, newNote);
-      },
-    });
+  const handleEditClicked = (e: MouseEvent) => {
+    e.stopPropagation();
+    setEditModeNoteId(id);
+    setTool('none');
   };
 
-  const handleBlur = (e: FocusEvent<HTMLDivElement>) => {
-    updateNoteContent(id, e.currentTarget.textContent || '');
+  const handleSave = (newContent: string) => {
+    updateNote({ id, content: newContent });
+    setEditModeNoteId(null);
   };
 
   return (
     <div
-      className="absolute bg-yellow-200 border border-yellow-500 rounded p-3 shadow-lg z-3"
-      style={{ top: parseInt(y), left: parseInt(x) }}
-      contentEditable
-      suppressContentEditableWarning
-      onBlur={handleBlur}
+      ref={cardRef}
+      className="relative w-full h-full bg-yellow-200 border border-yellow-500 rounded p-3 shadow-lg z-3"
     >
-      {content}
+      {!isEditMode && (
+        <button
+          className="cursor-pointer absolute top-2 right-2 bg-white rounded px-2 py-1 text-sm shadow hover:bg-gray-100"
+          onClick={handleEditClicked}
+        >
+          Edytuj
+        </button>
+      )}
+
+      {isEditMode ? (
+        <NoteEditor id={id} content={content} onSave={handleSave} />
+      ) : (
+        <div dangerouslySetInnerHTML={{ __html: content }} />
+      )}
     </div>
   );
 }
