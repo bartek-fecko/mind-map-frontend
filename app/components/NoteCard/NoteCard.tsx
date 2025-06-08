@@ -48,6 +48,10 @@ export default function NoteCard({ id, content }: Props) {
     setEditModeNoteId(null);
   };
 
+  const handleCancel = () => {
+    setEditModeNoteId(null);
+  };
+
   return (
     <>
       <div
@@ -72,7 +76,7 @@ export default function NoteCard({ id, content }: Props) {
         )}
 
         {isEditMode ? (
-          <NoteEditor id={id} content={content} onSave={handleSave} />
+          <NoteEditor id={id} content={content} onSave={handleSave} onCancel={handleCancel} />
         ) : (
           <div className="editor-container read-only">
             <div dangerouslySetInnerHTML={{ __html: content }} />

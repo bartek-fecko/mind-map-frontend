@@ -126,6 +126,7 @@ type NoteEditorProps = {
   id: string;
   content: string;
   onSave: (newContent: string) => void;
+  onCancel: () => void;
 };
 
 function LoadInitialHtml({ html }: { html: string }) {
@@ -161,12 +162,12 @@ const editorConfig = {
   theme: ExampleTheme,
 };
 
-export default function NoteEditor({ id, content, onSave }: NoteEditorProps) {
+export default function NoteEditor({ id, content, onSave, onCancel }: NoteEditorProps) {
   return (
     <LexicalComposer initialConfig={editorConfig} key={id}>
       <LoadInitialHtml html={content} />
       <div className="editor-container">
-        <ToolbarPlugin onSave={onSave} />
+        <ToolbarPlugin onSave={onSave} onCancel={onCancel} />
         <div className="editor-inner">
           <RichTextPlugin
             contentEditable={<ContentEditable className="editor-input" />}

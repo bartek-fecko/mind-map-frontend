@@ -28,7 +28,13 @@ function Divider() {
   return <div className="divider" />;
 }
 
-export default function ToolbarPlugin({ onSave }: { onSave: (content: string) => void }) {
+export default function ToolbarPlugin({
+  onCancel,
+  onSave,
+}: {
+  onCancel: () => void;
+  onSave: (content: string) => void;
+}) {
   const [editor] = useLexicalComposerContext();
   const toolbarRef = useRef(null);
   const [canUndo, setCanUndo] = useState(false);
@@ -58,7 +64,7 @@ export default function ToolbarPlugin({ onSave }: { onSave: (content: string) =>
       }),
       editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
-        (_payload, _newEditor) => {
+        () => {
           $updateToolbar();
           return false;
         },
@@ -182,6 +188,14 @@ export default function ToolbarPlugin({ onSave }: { onSave: (content: string) =>
       <Divider />
       <button
         onClick={() => {
+          onCancel();
+        }}
+        className="cursor-pointer px-3 py-1 rounded bg-gray-400 text-white font-medium hover:bg-gray-500 transition shadow-md relative z-10"
+      >
+        Anuluj
+      </button>
+      <button
+        onClick={() => {
           editor.getEditorState().read(() => {
             const html = $generateHtmlFromNodes(editor, null);
             onSave(html);
@@ -189,7 +203,7 @@ export default function ToolbarPlugin({ onSave }: { onSave: (content: string) =>
         }}
         className="cursor-pointer px-3 py-1 hover rounded bg-blue-700 text-white font-medium hover:bg-blue-800 transition shadow-md relative z-10"
       >
-        Save
+        Zapisz
       </button>{' '}
     </div>
   );

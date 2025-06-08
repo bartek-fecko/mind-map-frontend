@@ -70,7 +70,7 @@ function CanvasComponent() {
             width: note.width || 200,
             height: note.height || 150,
           }}
-          minWidth={editModeNoteId === note.id ? 600 : undefined}
+          minWidth={editModeNoteId === note.id ? 700 : undefined}
           minHeight={editModeNoteId === note.id ? 400 : undefined}
           onUpdate={(id, updates) => {
             if (editModeNoteId === note.id) return;
