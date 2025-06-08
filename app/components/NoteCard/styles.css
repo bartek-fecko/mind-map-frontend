@@ -13,6 +13,11 @@
   flex-direction: column;
 }
 
+.editor-container.read-only .editor-input {
+  padding: 0;
+  background: transparent;
+}
+
 .editor-inner {
   background: #fff;
   position: relative;

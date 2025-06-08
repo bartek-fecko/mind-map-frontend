@@ -5,6 +5,7 @@ import { Socket } from 'socket.io-client';
 import { useNoteStore } from '../store/useNoteStore';
 import { getSocketSingleton } from './SocketSingleton';
 import { QueueOfflineEvent } from '../types/queueOfflineEvent';
+import { DrawingSocketEvents, NotesSocketEvents } from '../types/socketEvents';
 
 type SocketContextType = {
   socket: Socket;
@@ -24,17 +25,20 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     setSocket(initSocket);
 
     initSocket.on('connect', () => {
-      initSocket.emit('notes:get-all');
+      initSocket.emit(NotesSocketEvents.GET_ALL);
+      const drawingId = 'init'; // TODO: podmień na realne ID
+      initSocket.emit(DrawingSocketEvents.LOAD_DRAWING, drawingId);
       flushOfflineEvents();
     });
 
-    initSocket.on('notes:get-all', (notes) => {
+    initSocket.on(NotesSocketEvents.GET_ALL, (notes) => {
       setNotes(notes);
     });
 
     return () => {
       initSocket.off('connect');
-      initSocket.off('notes:get-all');
+      initSocket.off(DrawingSocketEvents.LOAD_DRAWING);
+      initSocket.off(NotesSocketEvents.GET_ALL);
     };
   }, []);
 

@@ -11,7 +11,12 @@ import { Note } from '../types/notes';
 
 export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const { tool, setTool } = useToolbarStore();
-  const { addNote, removeNote, updateNote: updateStoreNote, removeAllNotes: removeAllStoreNotes } = useNoteStore();
+  const {
+    addNote,
+    removeNote: removeStoreNote,
+    updateNote: updateStoreNote,
+    removeAllNotes: removeAllStoreNotes,
+  } = useNoteStore();
   const { socket } = useSocket();
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -72,10 +77,15 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
     });
   };
 
+  const removeNote = (id: string) => {
+    removeStoreNote(id);
+    socket.emit(NotesSocketEvents.REMOVE, id);
+  };
+
   const removeAllNotes = () => {
     removeAllStoreNotes();
     socket.emit(NotesSocketEvents.REMOVE_ALL);
   };
 
-  return { handleCanvasClick, updateNote, removeAllNotes };
+  return { handleCanvasClick, updateNote, removeNote, removeAllNotes };
 }

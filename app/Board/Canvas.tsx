@@ -12,6 +12,7 @@ import { useEmoji } from '../hooks/useEmoji';
 import { useEmojiStore } from '../store/useEmojiStore';
 import EmojiIcon from '../components/EmojiIcon/EmojiIcon';
 import ResizableCard from '../components/ResizableCard/ResizableCard';
+import { useDrawingSocketListeners } from '../hooks/useDrawingSocketListeners';
 
 function CanvasComponent() {
   const localCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,6 +41,7 @@ function CanvasComponent() {
   }, []);
 
   useNoteSocketListeners();
+  useDrawingSocketListeners();
 
   const cursorStyle = tool !== 'none' ? CURSOR_MAP[tool] : 'default';
 
