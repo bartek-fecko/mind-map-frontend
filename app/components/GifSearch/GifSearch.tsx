@@ -9,7 +9,7 @@ import { GifItem, useGifStore } from '@/app/store/useGifStore';
 import { useSocket } from '@/app/providers/SocketProvider';
 import { GifsSocketEvents } from '@/app/types/socketEvents';
 
-const gf = new GiphyFetch('cvf9D37OPCF9dBsa0c1v8Be6E179I8Qg');
+const gf = new GiphyFetch(process.env.GIPHY_FETCH_URL!);
 
 interface GiphySearchProps {
   onSelectGif?: (gif: GifItem) => void;
