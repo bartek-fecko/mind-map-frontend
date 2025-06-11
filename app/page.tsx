@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getBoards } from '@/lib/api';
-import CreateBoardForm from './boarder/CreateBoardForm';
+import CreateBoardForm from './board/CreateBoardForm';
 
 export default async function HomePage() {
   const boards = await getBoards();
