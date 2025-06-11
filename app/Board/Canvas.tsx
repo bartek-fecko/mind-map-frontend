@@ -13,13 +13,19 @@ import { useEmojiStore } from '../store/useEmojiStore';
 import EmojiIcon from '../components/EmojiIcon/EmojiIcon';
 import ResizableCard from '../components/ResizableCard/ResizableCard';
 import { useDrawingSocketListeners } from '../hooks/useDrawingSocketListeners';
+import { useGifStore } from '../store/useGifStore';
+import Image from 'next/image';
+import { useGifSocketListeners } from '../hooks/useGifSocketListeners';
 
 function CanvasComponent() {
   const localCanvasRef = useRef<HTMLCanvasElement>(null);
   const { notes, editModeNoteId } = useNoteStore();
-  const { emojis } = useEmojiStore();
-  const { tool } = useToolbarStore();
-  const { startDraw, draw, stopDraw } = useDrawing();
+  const emojis = useEmojiStore((s) => s.emojis);
+  const updateEmoji = useEmojiStore((s) => s.updateEmoji);
+  const gifs = useGifStore((s) => s.gifs);
+  const tool = useToolbarStore((s) => s.tool);
+  const { boardId, startDraw, draw, stopDraw, clearCanvas } = useDrawing();
+  const clearNotes = useNoteStore((state) => state.removeAllNotes);
 
   const { updateNote } = useNotes(localCanvasRef);
   const { handleCanvasClick: handleNoteClick } = useNotes(localCanvasRef);
@@ -34,14 +40,17 @@ function CanvasComponent() {
     if (localCanvasRef.current) {
       const store = useDrawingStore.getState();
       store.setCanvasRef(localCanvasRef.current);
-      if (!store.workerRef) {
-        store.initWorker();
-      }
+      store.initWorker();
     }
-  }, []);
+    return () => {
+      clearNotes();
+      clearCanvas();
+    };
+  }, [boardId]);
 
   useNoteSocketListeners();
   useDrawingSocketListeners();
+  useGifSocketListeners();
 
   const cursorStyle = tool !== 'none' ? CURSOR_MAP[tool] : 'default';
 
@@ -70,8 +79,8 @@ function CanvasComponent() {
             width: note.width || 200,
             height: note.height || 150,
           }}
-          minWidth={editModeNoteId === note.id ? 700 : undefined}
-          minHeight={editModeNoteId === note.id ? 400 : undefined}
+          minWidth={editModeNoteId === note.id ? 700 : 160}
+          minHeight={editModeNoteId === note.id ? 400 : 160}
           onUpdate={(id, updates) => {
             if (editModeNoteId === note.id) return;
             updateNote({
@@ -88,7 +97,46 @@ function CanvasComponent() {
         </ResizableCard>
       ))}
       {emojis.map((emoji) => (
-        <EmojiIcon key={emoji.id} {...emoji} />
+        <ResizableCard
+          key={emoji.id}
+          id={emoji.id}
+          element={{
+            x: emoji.x,
+            y: emoji.y,
+            width: emoji.width,
+            height: emoji.height,
+          }}
+          minWidth={60}
+          minHeight={60}
+          onUpdate={(id, updates) => {
+            updateEmoji(id, {
+              ...updates,
+              x: updates.x ?? emoji.x,
+              y: updates.y ?? emoji.y,
+              width: updates.width ?? emoji.width,
+              height: updates.height ?? emoji.height,
+            });
+          }}
+        >
+          <EmojiIcon emoji={emoji} containerSize={{ width: emoji.width, height: emoji.height }} />
+        </ResizableCard>
+      ))}
+      {gifs.map((gif) => (
+        <ResizableCard
+          key={gif.id}
+          id={`${gif.id}`}
+          onUpdate={() => {}}
+          element={{ x: gif.x, y: gif.y, width: gif.width, height: gif.height }}
+        >
+          <Image
+            unoptimized
+            src={gif.url}
+            alt={gif.alt}
+            fill
+            style={{ objectFit: 'contain' }}
+            className="cursor-pointer"
+          />
+        </ResizableCard>
       ))}
     </div>
   );

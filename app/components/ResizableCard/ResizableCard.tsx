@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useDraggableResizable } from '../../hooks/useDraggableResizable';
 
-interface DraggableElement {
+export interface DraggableElement {
   x: number;
   y: number;
   width: number;
@@ -76,7 +76,7 @@ export default function ResizableCard({
       }}
     >
       <div className="absolute top-0 left-0 w-full h-5 z-10 cursor-move" onMouseDown={onDragStart} />
-      <div className="w-full h-full relative overflow-hidden">{children}</div>
+      <div className="w-full h-full relative overflow-visible flex items-center justify-center">{children}</div>
 
       {!disableInteractions && (
         <>

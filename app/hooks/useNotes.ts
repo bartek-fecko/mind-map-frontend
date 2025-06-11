@@ -17,7 +17,7 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
     updateNote: updateStoreNote,
     removeAllNotes: removeAllStoreNotes,
   } = useNoteStore();
-  const { socket } = useSocket();
+  const { boardId, socket } = useSocket();
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (tool !== 'note') return;
@@ -40,16 +40,15 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
       payload: snapshot,
       undo: () => {
         removeNote(snapshot.id);
-        socket.emit(NotesSocketEvents.REMOVE, snapshot.id);
       },
       redo: () => {
         const note = JSON.parse(JSON.stringify(snapshot));
         addNote(note);
-        socket.emit(NotesSocketEvents.ADD, note);
+        socket.emit(NotesSocketEvents.ADD, { note: newNote, boardId });
       },
     });
 
-    socket.emit(NotesSocketEvents.ADD, newNote);
+    socket.emit(NotesSocketEvents.ADD, { note: newNote, boardId });
     setTool('none');
   };
 
@@ -61,25 +60,25 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
     const newNote = { ...prevNote, ...note };
 
     updateStoreNote(newNote.id, newNote);
-    socket.emit(NotesSocketEvents.UPDATE, newNote);
+    socket.emit(NotesSocketEvents.UPDATE, { id: newNote.id, note: newNote });
 
     useHistoryStore.getState().pushAction({
       type: 'note-update',
       payload: { ...newNote },
       undo: () => {
         updateStoreNote(newNote.id, JSON.parse(JSON.stringify(prevNote)));
-        socket.emit(NotesSocketEvents.UPDATE, prevNote);
+        socket.emit(NotesSocketEvents.UPDATE, { id: prevNote.id, note: prevNote });
       },
       redo: () => {
         updateStoreNote(newNote.id, JSON.parse(JSON.stringify(newNote)));
-        socket.emit(NotesSocketEvents.UPDATE, newNote);
+        socket.emit(NotesSocketEvents.UPDATE, { id: newNote.id, note: newNote });
       },
     });
   };
 
   const removeNote = (id: string) => {
     removeStoreNote(id);
-    socket.emit(NotesSocketEvents.REMOVE, id);
+    socket.emit(NotesSocketEvents.REMOVE, { id });
   };
 
   const removeAllNotes = () => {

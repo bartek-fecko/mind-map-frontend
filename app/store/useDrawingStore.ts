@@ -36,14 +36,21 @@ export const useDrawingStore = create<DrawingStore>((set, get) => ({
   },
   workerRef: null,
   initWorker: () => {
-    if (get().workerRef || !get().canvasRef.current) return;
+    const currentWorker = get().workerRef;
+    const canvas = get().canvasRef.current;
+    if (!canvas) return;
 
-    const offscreen = get().canvasRef.current!.transferControlToOffscreen();
+    if (currentWorker) {
+      currentWorker.terminate();
+      set({ workerRef: null });
+    }
+
+    const offscreen = canvas.transferControlToOffscreen();
     const worker = new Worker(new URL('../workers/drawingWorker.ts', import.meta.url));
     worker.postMessage({ canvas: offscreen }, [offscreen]);
-
     set({ workerRef: worker });
   },
+
   strokes: [],
   addStroke: (stroke) => set((state) => ({ strokes: [...state.strokes, stroke] })),
   removeStroke: (id) => set((state) => ({ strokes: state.strokes.filter((s) => s.id !== id) })),

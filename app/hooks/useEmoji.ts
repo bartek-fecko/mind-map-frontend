@@ -17,10 +17,10 @@ export function useEmoji(canvasRef: RefObject<HTMLCanvasElement | null>) {
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left).toString();
-    const y = (e.clientY - rect.top).toString();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    const newEmoji: EmojiItem = { id: uuidv4(), x, y, emoji: selectedEmoji };
+    const newEmoji: EmojiItem = { id: uuidv4(), x, y, emoji: selectedEmoji, width: 60, height: 60 };
 
     addEmoji(newEmoji);
 

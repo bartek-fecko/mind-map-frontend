@@ -5,43 +5,46 @@ import { DrawingSocketEvents } from '../types/socketEvents';
 import { useDrawing } from './useDrawing';
 
 export const useDrawingSocketListeners = () => {
-  const { socket } = useSocket();
-
+  const { socket, boardId } = useSocket();
   const addStroke = useDrawingStore((s) => s.addStroke);
   const removeStroke = useDrawingStore((s) => s.removeStroke);
   const clearStrokes = useDrawingStore((s) => s.clearStrokes);
-  const { drawingId, isRedrawing, workerRef, redrawAll } = useDrawing();
+  const { isRedrawing, workerRef, redrawAll } = useDrawing();
 
   useEffect(() => {
     if (!socket) return;
-    socket.on(DrawingSocketEvents.LOAD_DRAWING, (strokes) => {
-      clearStrokes();
-      redrawAll(strokes);
-      strokes.forEach((stroke: Stroke) => addStroke(stroke));
-    });
+
+    socket.on(
+      DrawingSocketEvents.LOAD_DRAWING,
+      ({ boardId: requestBoardId, strokes }: { boardId: number; strokes: Stroke[] }) => {
+        if (boardId !== requestBoardId) return;
+        clearStrokes();
+        redrawAll(strokes);
+        strokes.forEach((stroke: Stroke) => addStroke(stroke));
+      },
+    );
 
     socket.on(DrawingSocketEvents.ADD_STROKE, (data) => {
       if (isRedrawing) return;
-      if (data.drawingId !== drawingId) return;
+      if (data.boardId !== boardId) return;
 
-      if (useDrawingStore.getState().strokes.find((s) => s.id === data.id)) return;
+      const exists = useDrawingStore.getState().strokes.find((s) => s.id === data.stroke.id);
+      if (exists) return;
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { drawingId: _, ...stroke } = data;
-      addStroke(stroke);
-      workerRef?.postMessage({ drawCommands: stroke });
+      addStroke(data.stroke);
+      workerRef?.postMessage({ drawCommands: data.stroke });
     });
 
     socket.on(DrawingSocketEvents.REMOVE_STROKE, (data) => {
       if (isRedrawing) return;
-      if (data.drawingId !== drawingId) return;
+      if (data.boardId !== boardId) return;
 
       removeStroke(data.strokeId);
       redrawAll(useDrawingStore.getState().strokes);
     });
 
     socket.on(DrawingSocketEvents.REMOVE_ALL_STROKES, (data) => {
-      if (data !== drawingId) return;
+      if (data !== boardId) return;
 
       clearStrokes();
       workerRef?.postMessage({ clear: true });
@@ -55,7 +58,7 @@ export const useDrawingSocketListeners = () => {
     });
 
     socket.on(DrawingSocketEvents.UNDO_CLEAR_ALL, (data) => {
-      if (data.drawingId !== drawingId) return;
+      if (data.boardId !== boardId) return;
 
       clearStrokes();
       data.strokes.forEach((stroke: Stroke) => addStroke(stroke));
@@ -70,5 +73,5 @@ export const useDrawingSocketListeners = () => {
       socket.off(DrawingSocketEvents.REMOVE_ALL);
       socket.off(DrawingSocketEvents.UNDO_CLEAR_ALL);
     };
-  }, [socket, workerRef]);
+  }, [boardId, socket, workerRef, boardId, isRedrawing]);
 };

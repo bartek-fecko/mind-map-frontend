@@ -13,7 +13,7 @@ export function useDrawing() {
   const points = useRef<{ x: number; y: number }[]>([]);
   const strokeId = useRef<string | null>(null);
 
-  const { socket } = useSocket();
+  const { socket, boardId } = useSocket();
   const canvasRef = useDrawingStore((s) => s.canvasRef);
   const workerRef = useDrawingStore((s) => s.workerRef);
   const strokeColor = useDrawingStore((s) => s.strokeColor);
@@ -25,7 +25,6 @@ export function useDrawing() {
   const setNotes = useNoteStore((s) => s.setNotes);
   const pushAction = useHistoryStore((s) => s.pushAction);
   const clearHistory = useHistoryStore((s) => s.clear);
-  const drawingId = 'init'; // TODO: podmień na realne ID
 
   const getMousePos = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current!.getBoundingClientRect();
@@ -43,13 +42,11 @@ export function useDrawing() {
 
   const redrawAll = (strokeList: Stroke[]) => {
     setIsRedrawing(true);
-    workerRef?.postMessage({ clear: true });
-
-    strokeList.forEach(drawToWorker);
-
-    setTimeout(() => {
-      setIsRedrawing(false);
-    }, 50);
+    workerRef?.postMessage({
+      clear: true,
+      drawCommands: strokeList,
+    });
+    setIsRedrawing(false);
   };
 
   const startDraw = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -84,7 +81,7 @@ export function useDrawing() {
     addStroke(newStroke);
     drawToWorker(newStroke);
 
-    socket.emit(DrawingSocketEvents.ADD_STROKE, { drawingId, ...newStroke });
+    socket.emit(DrawingSocketEvents.ADD_STROKE, { boardId, ...newStroke });
 
     pushAction({
       type: 'drawStroke',
@@ -92,17 +89,22 @@ export function useDrawing() {
       undo: () => {
         removeStroke(newStroke.id);
         redrawAll(useDrawingStore.getState().strokes.filter((s) => s.id !== newStroke.id));
-        socket.emit(DrawingSocketEvents.REMOVE_STROKE, { drawingId, strokeId: newStroke.id });
+        socket.emit(DrawingSocketEvents.REMOVE_STROKE, { boardId, strokeId: newStroke.id });
       },
       redo: () => {
         addStroke(newStroke);
         redrawAll(useDrawingStore.getState().strokes.concat(newStroke));
-        socket.emit(DrawingSocketEvents.ADD_STROKE, { drawingId, ...newStroke });
+        socket.emit(DrawingSocketEvents.ADD_STROKE, { boardId, ...newStroke });
       },
     });
 
     points.current = [];
     strokeId.current = null;
+  };
+
+  const clearCanvas = () => {
+    clearStrokes();
+    workerRef?.postMessage({ clear: true });
   };
 
   const clearAllDrawings = () => {
@@ -112,7 +114,7 @@ export function useDrawing() {
     clearStrokes();
     workerRef?.postMessage({ clear: true });
 
-    socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES, drawingId);
+    socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES, boardId);
 
     pushAction({
       type: 'clearAll',
@@ -122,14 +124,14 @@ export function useDrawing() {
         });
         redrawAll(previousStrokes);
         socket.emit(DrawingSocketEvents.UNDO_CLEAR_ALL, {
-          drawingId,
+          boardId,
           strokes: previousStrokes,
         });
       },
       redo: () => {
         clearStrokes();
         redrawAll([]);
-        socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES, drawingId);
+        socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES, boardId);
       },
     });
   };
@@ -152,8 +154,9 @@ export function useDrawing() {
     clearAll,
     clearAllDrawings,
     redrawAll,
+    clearCanvas,
     isRedrawing,
-    drawingId,
     workerRef,
+    boardId,
   };
 }

@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { Note } from '../types/notes';
 type NoteStore = {
   notes: Note[];
-  removedNotes: Note[];
   editModeNoteId: string | null;
   setEditModeNoteId: (id: string | null) => void;
   addNote: (note: Partial<Note>) => Note;
@@ -15,7 +14,6 @@ type NoteStore = {
 
 export const useNoteStore = create<NoteStore>((set) => ({
   notes: [],
-  removedNotes: [],
   editModeNoteId: null,
   setEditModeNoteId: (id) => set({ editModeNoteId: id }),
   addNote: (note) => {
@@ -32,15 +30,10 @@ export const useNoteStore = create<NoteStore>((set) => ({
       notes: state.notes.map((note) => (note.id === id ? { ...note, ...changes } : note)),
     })),
   removeNote: (id) =>
-    set((state) => {
-      const noteToRemove = state.notes.find((n) => n.id === id);
-      if (!noteToRemove) return state;
-      return {
-        notes: state.notes.filter((n) => n.id !== id),
-        removedNotes: [...state.removedNotes.filter((n) => n.id !== id), noteToRemove],
-      };
-    }),
+    set((state) => ({
+      notes: state.notes.filter((n) => n.id !== id),
+    })),
   removeAllNotes: () => {
-    set(() => ({ notes: [], removedNotes: [] }));
+    set(() => ({ notes: [] }));
   },
 }));

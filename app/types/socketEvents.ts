@@ -15,3 +15,9 @@ export const DrawingSocketEvents = {
   REMOVE_ALL_STROKES: 'drawing:remove-all-strokes',
   UNDO_CLEAR_ALL: 'drawing:undo_clear_all',
 } as const;
+
+export const GifsSocketEvents = {
+  LOAD_GIFS: 'gifs:load-gifs',
+  ADD_GIF: 'gifs:add-gif',
+  REMOVE_GIF: 'gifs:remove-gif',
+} as const;

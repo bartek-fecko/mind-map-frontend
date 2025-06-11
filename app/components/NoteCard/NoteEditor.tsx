@@ -1,11 +1,4 @@
 'use client';
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
 
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
@@ -40,14 +33,23 @@ const placeholder = 'Enter some rich text...';
 const removeStylesExportDOM = (editor: LexicalEditor, target: LexicalNode): DOMExportOutput => {
   const output = target.exportDOM(editor);
   if (output && isHTMLElement(output.element)) {
-    // Remove all inline styles and classes if the element is an HTMLElement
-    // Children are checked as well since TextNode can be nested
-    // in i, b, and strong tags.
     for (const el of [output.element, ...output.element.querySelectorAll('[style],[class],[dir="ltr"]')]) {
       el.removeAttribute('class');
-      el.removeAttribute('style');
       if (el.getAttribute('dir') === 'ltr') {
         el.removeAttribute('dir');
+      }
+
+      const style = el.getAttribute('style');
+      if (style) {
+        const textAlignStyle = style
+          .split(';')
+          .filter((s) => s.trim().startsWith('text-align'))
+          .join(';');
+        if (textAlignStyle) {
+          el.setAttribute('style', textAlignStyle);
+        } else {
+          el.removeAttribute('style');
+        }
       }
     }
   }
