@@ -10,8 +10,8 @@ interface MindMapProps {
   params: { boardId: string };
 }
 
-export default async function MindMap({ params }: MindMapProps) {
-  const awaitedParams = await params;
+export default async function MindMap(props: Promise<MindMapProps>) {
+  const { params } = await props;
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
 
@@ -19,7 +19,7 @@ export default async function MindMap({ params }: MindMapProps) {
     notFound();
   }
 
-  const board = await fetchApi(`/boards/${awaitedParams.boardId}`);
+  const board = await fetchApi(`/boards/${params.boardId}`);
 
   if (!board) {
     notFound();
@@ -27,7 +27,7 @@ export default async function MindMap({ params }: MindMapProps) {
 
   return (
     <div className={styles.container}>
-      <SocketProvider boardId={parseInt(awaitedParams.boardId, 10)}>
+      <SocketProvider boardId={parseInt(params.boardId, 10)}>
         <Toolbar />
         <Canvas />
       </SocketProvider>
