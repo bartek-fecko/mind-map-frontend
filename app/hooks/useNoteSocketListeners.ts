@@ -5,7 +5,7 @@ import { NotesSocketEvents } from '../types/socketEvents';
 import { Note } from '../types/notes';
 
 export const useNoteSocketListeners = () => {
-  const { socket } = useSocket();
+  const { boardId, socket } = useSocket();
 
   const setNotes = useNoteStore((state) => state.setNotes);
   const addNote = useNoteStore((state) => state.addNote);

@@ -1,40 +1,52 @@
-'use client';
-
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
-import { FaceSmileIcon } from '@heroicons/react/24/outline';
 import { useToolbarStore } from '@/app/store/useToolbarStore';
+import { ToolbarIcons as Icon } from '../Toolbar/icons/ToolbarIcons';
 
-type EmojiPickerProps = {
-  buttonBaseClasses?: string;
-  buttonHoverClasses?: string;
-};
-
-export default function EmojiPicker({ buttonBaseClasses, buttonHoverClasses }: EmojiPickerProps) {
+export default function EmojiPicker() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const setSelectedEmoji = useToolbarStore((state) => state.setSelectedEmoji);
   const setTool = useToolbarStore((s) => s.setTool);
+  const pickerRef = useRef<HTMLDivElement>(null);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEmojiSelect = (emoji: any) => {
     setTool('emoji');
     setSelectedEmoji(emoji.native);
     setShowEmojiPicker(false);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
   return (
-    <div className="relative">
-      <button
-        onClick={() => setShowEmojiPicker((prev) => !prev)}
-        className={`${buttonBaseClasses} ${showEmojiPicker ? 'border-blue-500 bg-blue-100' : buttonHoverClasses}`}
-        aria-pressed={showEmojiPicker}
-      >
-        <FaceSmileIcon className="w-6 h-6 text-gray-600" />
-      </button>
+    <div ref={pickerRef}>
+      <Icon name="emoji" onClick={() => setShowEmojiPicker((prev) => !prev)} />
 
       {showEmojiPicker && (
-        <div className="absolute top-10 left-0 z-50">
-          <Picker data={data} onEmojiSelect={handleEmojiSelect} theme="light" previewPosition="none" perLine={6} />
+        <div className="absolute bottom-11">
+          <Picker
+            data={data}
+            onEmojiSelect={handleEmojiSelect}
+            theme="light"
+            previewPosition="none"
+            perLine={6}
+            position="top"
+          />
         </div>
       )}
     </div>

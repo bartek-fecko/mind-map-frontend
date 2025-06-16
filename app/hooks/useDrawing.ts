@@ -142,8 +142,8 @@ export function useDrawing() {
     clearHistory();
     workerRef?.postMessage({ clear: true });
     if (broadcast) {
-      socket.emit(NotesSocketEvents.REMOVE_ALL);
-      socket.emit(DrawingSocketEvents.REMOVE_ALL);
+      socket.emit(NotesSocketEvents.REMOVE_ALL, boardId);
+      socket.emit(DrawingSocketEvents.REMOVE_ALL, boardId);
     }
   };
 

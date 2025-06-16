@@ -51,7 +51,8 @@ export const useDrawingSocketListeners = () => {
       redrawAll([]);
     });
 
-    socket.on(DrawingSocketEvents.REMOVE_ALL, () => {
+    socket.on(DrawingSocketEvents.REMOVE_ALL, (responseBoardId: number) => {
+      if (boardId !== responseBoardId) return;
       clearStrokes();
       workerRef?.postMessage({ clear: true });
       redrawAll([]);
@@ -73,5 +74,5 @@ export const useDrawingSocketListeners = () => {
       socket.off(DrawingSocketEvents.REMOVE_ALL);
       socket.off(DrawingSocketEvents.UNDO_CLEAR_ALL);
     };
-  }, [boardId, socket, workerRef, boardId, isRedrawing]);
+  }, [boardId, socket, workerRef, boardId]);
 };

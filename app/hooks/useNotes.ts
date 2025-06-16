@@ -83,7 +83,7 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
 
   const removeAllNotes = () => {
     removeAllStoreNotes();
-    socket.emit(NotesSocketEvents.REMOVE_ALL);
+    socket.emit(NotesSocketEvents.REMOVE_ALL, boardId);
   };
 
   return { handleCanvasClick, updateNote, removeNote, removeAllNotes };

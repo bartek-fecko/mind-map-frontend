@@ -94,7 +94,6 @@ export const useDraggableResizable = (
     const dy = e.clientY - resizeStart.current.y;
 
     let { x, y, width, height } = resizeInitial.current;
-console.log(x, y, width);
 
     switch (resizeDirection.current) {
       case 'top-left':

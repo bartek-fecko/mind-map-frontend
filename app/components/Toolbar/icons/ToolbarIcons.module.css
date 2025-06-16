@@ -1,0 +1,22 @@
+.iconWrapper {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 8px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.selected {
+  background-color: #5c7cfaff;
+}
+
+.icon {
+  stroke: #374151ff;
+  margin: 0 10px;
+  cursor: pointer;
+}

@@ -9,6 +9,7 @@ export function getSocketSingleton(): Socket {
     if (typeof window !== 'undefined') {
       socket = io(SOCKET_URL, {
         transports: ['websocket'],
+        withCredentials: true,
       });
     }
   }

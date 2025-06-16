@@ -16,8 +16,10 @@ import { useDrawingSocketListeners } from '../hooks/useDrawingSocketListeners';
 import { useGifStore } from '../store/useGifStore';
 import Image from 'next/image';
 import { useGifSocketListeners } from '../hooks/useGifSocketListeners';
+import styles from './Board.module.css';
+import Loader from '../components/Loader/Loader';
 
-function CanvasComponent() {
+function BoardComponent() {
   const localCanvasRef = useRef<HTMLCanvasElement>(null);
   const { notes, editModeNoteId } = useNoteStore();
   const emojis = useEmojiStore((s) => s.emojis);
@@ -55,7 +57,7 @@ function CanvasComponent() {
   const cursorStyle = tool !== 'none' ? CURSOR_MAP[tool] : 'default';
 
   return (
-    <div className={`relative min-w-[2000px] min-h-[1200px] z-2`}>
+    <div className={styles.board}>
       <canvas
         id="canvas"
         ref={localCanvasRef}
@@ -142,7 +144,7 @@ function CanvasComponent() {
   );
 }
 
-function CanvasWrapper() {
+function BoardWrapper() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -160,14 +162,10 @@ function CanvasWrapper() {
   }, []);
 
   if (!isReady || typeof window === 'undefined') {
-    return (
-      <div className="w-full h-full flex items-center justify-center text-lg font-bold text-gray-600 select-none">
-        Ładowanie...
-      </div>
-    );
+    return <Loader />;
   }
 
-  return <CanvasComponent />;
+  return <BoardComponent />;
 }
 
-export default memo(CanvasWrapper);
+export default memo(BoardWrapper);

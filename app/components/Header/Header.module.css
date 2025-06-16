@@ -1,0 +1,67 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0px;
+  box-shadow: 0px 0px 1px #171a1f12, 0px 0px 2px #171a1f1f;
+}
+
+.share {
+  height: 40px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 500;
+  color: #6f42c1ff;
+  border-radius: 8px;
+  border-width: 1px;
+  border-color: #6f42c1ff;
+  border-style: solid;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.textbox {
+  position: relative;
+  opacity: 1;
+  width: 256px;
+  height: 36px;
+}
+
+.textbox input {
+  width: 100%;
+  height: 36px;
+  padding-left: 34px;
+  padding-right: 12px;
+  font-family: Inter;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+  background: #f3f4f6ff;
+  border-radius: 6px;
+  border-width: 0px;
+  outline: none;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9095a0ff;
+  pointer-events: none;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
