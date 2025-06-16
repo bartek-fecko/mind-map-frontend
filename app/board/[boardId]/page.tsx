@@ -10,8 +10,7 @@ interface MindMapProps {
   params: { boardId: string };
 }
 
-export default async function MindMap(props: Promise<MindMapProps>) {
-  const { params } = await props;
+export default async function MindMap({ params }: MindMapProps) {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
 
