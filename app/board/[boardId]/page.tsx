@@ -6,19 +6,16 @@ import Canvas from '../Board';
 import styles from './MindMap.module.css';
 import { fetchApi } from '@/lib/api';
 
-interface MindMapProps {
-  params: { boardId: string };
-}
-
-export default async function MindMap({ params }: MindMapProps) {
+export default async function MindMap({ params }: { params: Promise<{ boardId: string }> }) {
   const cookieStore = await cookies();
+  const awaitedParams = await params;
   const token = cookieStore.get('token')?.value;
 
   if (!token) {
     notFound();
   }
 
-  const board = await fetchApi(`/boards/${params.boardId}`);
+  const board = await fetchApi(`/boards/${awaitedParams.boardId}`);
 
   if (!board) {
     notFound();
@@ -26,7 +23,7 @@ export default async function MindMap({ params }: MindMapProps) {
 
   return (
     <div className={styles.container}>
-      <SocketProvider boardId={parseInt(params.boardId, 10)}>
+      <SocketProvider boardId={parseInt(awaitedParams.boardId, 10)}>
         <Toolbar />
         <Canvas />
       </SocketProvider>
