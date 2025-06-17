@@ -1,7 +1,6 @@
 'use client';
 
-import { fetchApi } from '@/lib/api';
-import { useEffect, useState } from 'react';
+ import { useEffect, useState } from 'react';
 
 type User = {
   id: number;
@@ -34,8 +33,8 @@ const users: User[] = [
 export default function ShareBoardModal() {
   useEffect(() => {
     const getUsers = async () => {
-      const users = await fetchApi('/users');
-      console.log(users);
+
+      // console.log(users);
     };
 
     getUsers();
