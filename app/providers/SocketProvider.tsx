@@ -5,6 +5,7 @@ import { Socket } from 'socket.io-client';
 import { getSocketSingleton } from './SocketSingleton';
 import { QueueOfflineEvent } from '../types/queueOfflineEvent';
 import { DrawingSocketEvents, GifsSocketEvents, NotesSocketEvents } from '../types/socketEvents';
+import { useSession } from 'next-auth/react';
 
 type SocketContextType = {
   socket: Socket;
@@ -15,11 +16,14 @@ type SocketContextType = {
 const SocketContext = createContext<SocketContextType | null>(null);
 
 export const SocketProvider = ({ children, boardId }: { children: React.ReactNode; boardId: number }) => {
+  const { data: session } = useSession();
   const [socket, setSocket] = useState<Socket>();
   const offlineEventQueue = useRef<QueueOfflineEvent[]>([]);
 
   useEffect(() => {
-    const initSocket = getSocketSingleton();
+    if (!session) return;
+    const token = session?.backendTokens?.accessToken;
+    const initSocket = getSocketSingleton(token);
     setSocket(initSocket);
 
     const onConnect = () => {
@@ -37,7 +41,7 @@ export const SocketProvider = ({ children, boardId }: { children: React.ReactNod
     return () => {
       initSocket.off('connect', onConnect);
     };
-  }, [boardId]);
+  }, [boardId, session]);
 
   const queueOfflineEvent = (event: QueueOfflineEvent) => {
     offlineEventQueue.current.push(event);

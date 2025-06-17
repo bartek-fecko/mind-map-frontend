@@ -1,21 +1,28 @@
-import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { SocketProvider } from '@/app/providers/SocketProvider';
 import Toolbar from '../../components/Toolbar/Toolbar';
 import Canvas from '../Board';
 import styles from './MindMap.module.css';
-import { fetchApi } from '@/lib/api';
+import { Board } from '@/app/types/board';
+import { getSessionServer } from '@/lib/auth';
 
 export default async function MindMap({ params }: { params: Promise<{ boardId: string }> }) {
-  const cookieStore = await cookies();
   const awaitedParams = await params;
-  const token = cookieStore.get('token')?.value;
+  const session = await getSessionServer();
 
-  if (!token) {
+  if (!session?.user) {
     notFound();
   }
 
-  const board = await fetchApi(`/boards/${awaitedParams.boardId}`);
+  const response = await fetch(`${process.env.API_URL}/boards/${awaitedParams.boardId}`, {
+    headers: { Authorization: `Bearer ${session?.backendTokens.accessToken}`, 'Content-Type': 'application/json' },
+  });
+
+  if (response.status === 404) {
+    return notFound();
+  }
+
+  const board: Board = await response.json();
 
   if (!board) {
     notFound();

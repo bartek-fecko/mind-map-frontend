@@ -1,39 +1,16 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
-
-type User = {
-  name: string;
-  image?: string;
-};
+import { useSession } from 'next-auth/react';
 
 export default function UserInfo() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
-          credentials: 'include',
-        });
-        if (!res.ok) throw new Error('Failed to fetch user');
-        const data = await res.json();
-        setUser(data);
-      } catch (err) {
-        console.error(err);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    }
+  if (status === 'loading') return <span>Loading...</span>;
+  if (!session?.user) return <span>Not logged in</span>;
 
-    fetchUser();
-  }, []);
-
-  if (loading) return <span>Loading...</span>;
-  if (!user) return <span>Not logged in</span>;
+  const user = session.user;
 
   return (
     <>

@@ -30,3 +30,16 @@
 .button:disabled {
   opacity: 0.4;
 }
+
+.google {
+  background: #db4437ff;
+  color: white;
+}
+
+.google:hover {
+  background: #c33d35ff;
+}
+
+.google:active {
+  background: #9e3128ff;
+}

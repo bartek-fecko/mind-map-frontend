@@ -60,18 +60,19 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
     const newNote = { ...prevNote, ...note };
 
     updateStoreNote(newNote.id, newNote);
-    socket.emit(NotesSocketEvents.UPDATE, { id: newNote.id, note: newNote });
+
+    socket.emit(NotesSocketEvents.UPDATE, { id: newNote.id, note: newNote, boardId });
 
     useHistoryStore.getState().pushAction({
       type: 'note-update',
       payload: { ...newNote },
       undo: () => {
         updateStoreNote(newNote.id, JSON.parse(JSON.stringify(prevNote)));
-        socket.emit(NotesSocketEvents.UPDATE, { id: prevNote.id, note: prevNote });
+        socket.emit(NotesSocketEvents.UPDATE, { id: prevNote.id, note: prevNote, boardId });
       },
       redo: () => {
         updateStoreNote(newNote.id, JSON.parse(JSON.stringify(newNote)));
-        socket.emit(NotesSocketEvents.UPDATE, { id: newNote.id, note: newNote });
+        socket.emit(NotesSocketEvents.UPDATE, { id: newNote.id, note: newNote, boardId });
       },
     });
   };

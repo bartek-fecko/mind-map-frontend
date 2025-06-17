@@ -1,26 +1,34 @@
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import CreateBoardForm from './board/CreateBoardForm';
-import LoginButton from './components/LoginButton/LoginButton';
-import { fetchApi } from '@/lib/api';
 import { Board } from './types/board';
-import Button from './components/Button/Button';
 import ShareBoardModal from './components/ShareBoardModal/ShareBoardModal';
+import { getSessionServer } from '@/lib/auth';
+import LoginPage from './login/page';
+import GoogleLogin from './components/GoogleLogin/GoogleLogin';
 
 export default async function HomePage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+  const session = await getSessionServer();
 
-  if (!token) {
-    return <LoginButton />;
+  if (!session?.user) {
+    return <LoginPage />;
   }
 
-  const boards = await fetchApi<Board[]>('/boards');
+  const res = await fetch(`${process.env.API_URL}/boards`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) return <LoginPage />;
+
+  const boards: Board[] = await res.json();
 
   return (
     <div className="bg-secondary-base p-6 flex flex-col w-screen">
-              {/* <ShareBoardModal /> */}
-      
+      {/* <ShareBoardModal /> */}
+
       <div className="flex justify-between items-center mb-6">
         {/* <div className="flex gap-2">
           <form action={`${process.env.API_URL}/auth/logout`} method="GET">
@@ -56,6 +64,9 @@ export default async function HomePage() {
       </div>
 
       <CreateBoardForm />
+      <div className='w-50'>
+        <GoogleLogin />
+      </div>
     </div>
   );
 }
