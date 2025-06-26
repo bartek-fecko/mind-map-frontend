@@ -14,56 +14,54 @@ export const useDrawingSocketListeners = () => {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on(
-      DrawingSocketEvents.LOAD_DRAWING,
-      ({ boardId: requestBoardId, strokes }: { boardId: number; strokes: Stroke[] }) => {
-        if (boardId !== requestBoardId) return;
-        clearStrokes();
-        redrawAll(strokes);
-        strokes.forEach((stroke: Stroke) => addStroke(stroke));
-      },
-    );
-
-    socket.on(DrawingSocketEvents.ADD_STROKE, (data) => {
-      if (isRedrawing) return;
-      if (data.boardId !== boardId) return;
-
-      const exists = useDrawingStore.getState().strokes.find((s) => s.id === data.stroke.id);
-      if (exists) return;
-
-      addStroke(data.stroke);
-      workerRef?.postMessage({ drawCommands: data.stroke });
+    socket.on(DrawingSocketEvents.LOAD_DRAWING, (payload: { boardId: number; strokes: Stroke[] }) => {
+      if (boardId !== payload.boardId) return;
+      clearStrokes();
+      redrawAll(payload.strokes);
+      payload.strokes.forEach((stroke) => addStroke(stroke));
     });
 
-    socket.on(DrawingSocketEvents.REMOVE_STROKE, (data) => {
+    socket.on(DrawingSocketEvents.ADD_STROKE, (payload: { boardId: number; stroke: Stroke }) => {
       if (isRedrawing) return;
-      if (data.boardId !== boardId) return;
+      if (payload.boardId !== boardId) return;
 
-      removeStroke(data.strokeId);
+      const exists = useDrawingStore.getState().strokes.find((s) => s.id === payload.stroke.id);
+      if (exists) return;
+
+      addStroke(payload.stroke);
+      workerRef?.postMessage({ drawCommands: payload.stroke });
+    });
+
+    socket.on(DrawingSocketEvents.REMOVE_STROKE, (payload: { boardId: number; strokeId: string }) => {
+      if (isRedrawing) return;
+      if (payload.boardId !== boardId) return;
+
+      removeStroke(payload.strokeId);
       redrawAll(useDrawingStore.getState().strokes);
     });
 
-    socket.on(DrawingSocketEvents.REMOVE_ALL_STROKES, (data) => {
-      if (data !== boardId) return;
+    socket.on(DrawingSocketEvents.REMOVE_ALL_STROKES, (payload: { boardId: number }) => {
+      if (payload.boardId !== boardId) return;
 
       clearStrokes();
       workerRef?.postMessage({ clear: true });
       redrawAll([]);
     });
 
-    socket.on(DrawingSocketEvents.REMOVE_ALL, (responseBoardId: number) => {
-      if (boardId !== responseBoardId) return;
+    socket.on(DrawingSocketEvents.REMOVE_ALL, (payload: { boardId: number }) => {
+      if (payload.boardId !== boardId) return;
+
       clearStrokes();
       workerRef?.postMessage({ clear: true });
       redrawAll([]);
     });
 
-    socket.on(DrawingSocketEvents.UNDO_CLEAR_ALL, (data) => {
-      if (data.boardId !== boardId) return;
+    socket.on(DrawingSocketEvents.UNDO_CLEAR_ALL, (payload: { boardId: number; strokes: Stroke[] }) => {
+      if (payload.boardId !== boardId) return;
 
       clearStrokes();
-      data.strokes.forEach((stroke: Stroke) => addStroke(stroke));
-      redrawAll(data.strokes);
+      payload.strokes.forEach((stroke) => addStroke(stroke));
+      redrawAll(payload.strokes);
     });
 
     return () => {
@@ -74,5 +72,5 @@ export const useDrawingSocketListeners = () => {
       socket.off(DrawingSocketEvents.REMOVE_ALL);
       socket.off(DrawingSocketEvents.UNDO_CLEAR_ALL);
     };
-  }, [boardId, socket, workerRef, boardId]);
+  }, [boardId, socket, workerRef, addStroke, removeStroke, clearStrokes, redrawAll, isRedrawing]);
 };

@@ -5,13 +5,17 @@ import { JWT } from 'next-auth/jwt';
 
 const Backend_URL = process.env.NEXT_PUBLIC_API_URL;
 
-async function refreshToken(token: JWT): Promise<JWT> {
-  const res = await fetch(Backend_URL + '/auth/refresh', {
+async function refreshToken(token: JWT): Promise<JWT | null> {
+  const res = await fetch(`${Backend_URL}/auth/refresh`, {
     method: 'POST',
     headers: {
-      authorization: `Refresh ${token.backendTokens.refreshToken}`,
+      authorization: `Refresh ${token?.backendTokens?.refreshToken}`,
     },
   });
+
+  if (!res.ok) {
+    return null;
+  }
 
   const response = await res.json();
 
@@ -22,37 +26,47 @@ async function refreshToken(token: JWT): Promise<JWT> {
 }
 
 export const authOptions: NextAuthOptions = {
+  pages: {
+    signIn: '/login',
+    signOut: '/',
+    error: '/login',
+    verifyRequest: '/',
+    newUser: '/signup',
+  },
+  session: { strategy: 'jwt' },
   providers: [
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        username: {
-          label: 'Username',
-          type: 'text',
-          placeholder: 'jsmith',
-        },
+        email: { label: 'Email', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) return null;
-        const { username, password } = credentials;
-        const res = await fetch(Backend_URL + '/auth/login', {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const res = await fetch(`${Backend_URL}/auth/login`, {
           method: 'POST',
           body: JSON.stringify({
-            username,
-            password,
+            email: credentials.email,
+            password: credentials.password,
           }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         });
-        if (res.status == 401) {
-          return null;
-        }
-        const user = await res.json();
-        return user;
+
+        if (!res.ok) return null;
+
+        const data = await res.json();
+
+        return {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          image: data.user.image,
+          backendTokens: data.backendTokens,
+        };
       },
     }),
+
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -60,11 +74,7 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (user) {
-        token.user = user;
-      }
-      
+    async jwt({ token, account, user }): Promise<JWT> {
       if (account && account.provider === 'google') {
         const res = await fetch(`${Backend_URL}/auth/google-login`, {
           method: 'POST',
@@ -73,28 +83,55 @@ export const authOptions: NextAuthOptions = {
           },
           body: JSON.stringify({ access_token: account.id_token || account.access_token }),
         });
-        
+
         if (res.ok) {
           const data = await res.json();
-          console.log(data.backendTokens.expiresIn);
+
           token.backendTokens = data.backendTokens;
+          token.user = {
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.name,
+            image: data.user.image,
+          };
         } else {
-          console.error('Nie udało się zamienić tokena Google na backendowy JWT');
+          console.error('Google token exchange failed');
         }
+      } else if (user) {
+        token.user = {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+        token.backendTokens = user.backendTokens!;
       }
 
-      if (token.backendTokens && token.backendTokens.expiresIn) {
-        if (new Date().getTime() < token.backendTokens.expiresIn) return token;
-        return await refreshToken(token);
+      if (token.backendTokens?.expiresIn && Date.now() >= token.backendTokens.expiresIn) {
+        const refreshedToken = await refreshToken(token);
+        if (!refreshedToken) {
+          return {
+            ...token,
+            error: 'TokenExpired',
+            user: null,
+            backendTokens: null,
+          };
+        }
+        return refreshedToken;
       }
 
       return token;
     },
-    async session({ token, session }) {
-      session.user = token.user;
-      session.backendTokens = token.backendTokens;
 
+    async session({ token, session }) {
+      session.user = token.user ?? null;
+      session.backendTokens = token.backendTokens ?? null;
+      session.error = token.error ?? null;
       return session;
+    },
+
+    async redirect({ baseUrl }) {
+      return baseUrl;
     },
   },
 };

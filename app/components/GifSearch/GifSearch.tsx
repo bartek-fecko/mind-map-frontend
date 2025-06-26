@@ -3,11 +3,10 @@
 import { IGif } from '@giphy/js-types';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 import { useState, useEffect } from 'react';
-import { useDebounce } from '@/app/utils/useDebounce';
 import Image from 'next/image';
 import { GifItem, useGifStore } from '@/app/store/useGifStore';
-import { useSocket } from '@/app/providers/SocketProvider';
-import { GifsSocketEvents } from '@/app/types/socketEvents';
+import useDebounce from '@/app/utils/useDebounce';
+import { useGif } from '@/app/hooks/useGif';
 
 const gf = new GiphyFetch(process.env.NEXT_PUBLIC_GIPHY_FETCH_URL!);
 
@@ -19,9 +18,8 @@ export default function GiphySearch({ onSelectGif }: GiphySearchProps) {
   const [query, setQuery] = useState('');
   const [gifs, setGifs] = useState<IGif[]>([]);
   const debouncedQuery = useDebounce(query, 300);
-  const addGif = useGifStore((state) => state.addGif);
   const hideGifSearch = useGifStore((state) => state.hideGifSearch);
-  const { socket } = useSocket();
+  const { addGif } = useGif();
 
   useEffect(() => {
     if (debouncedQuery.trim() === '') {
@@ -49,12 +47,11 @@ export default function GiphySearch({ onSelectGif }: GiphySearchProps) {
     };
     onSelectGif?.(createdGif);
     addGif(createdGif);
-    socket.emit(GifsSocketEvents.ADD_GIF, { boardId: 'init', gif: createdGif });
     hideGifSearch();
   };
 
   return (
-    <div className="max-w-md w-full bg-white p-4 rounded shadow-lg z-50">
+    <div className="max-w-md w-full bg-white p-4 rounded bg-shadow-lg z-50">
       <input
         type="text"
         value={query}

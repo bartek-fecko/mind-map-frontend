@@ -81,20 +81,26 @@ export function useDrawing() {
     addStroke(newStroke);
     drawToWorker(newStroke);
 
-    socket.emit(DrawingSocketEvents.ADD_STROKE, { boardId, ...newStroke });
+    socket.emit(DrawingSocketEvents.ADD_STROKE, { payload: { boardId, ...newStroke } });
 
     pushAction({
       type: 'drawStroke',
       payload: newStroke,
       undo: () => {
         removeStroke(newStroke.id);
-        redrawAll(useDrawingStore.getState().strokes.filter((s) => s.id !== newStroke.id));
-        socket.emit(DrawingSocketEvents.REMOVE_STROKE, { boardId, strokeId: newStroke.id });
+        const strokes = useDrawingStore.getState().strokes.filter((s) => s.id !== newStroke.id);
+        redrawAll(strokes);
+        socket.emit(DrawingSocketEvents.REMOVE_STROKE, {
+          payload: { boardId, strokeId: newStroke.id },
+        });
       },
       redo: () => {
         addStroke(newStroke);
-        redrawAll(useDrawingStore.getState().strokes.concat(newStroke));
-        socket.emit(DrawingSocketEvents.ADD_STROKE, { boardId, ...newStroke });
+        const strokes = useDrawingStore.getState().strokes.concat(newStroke);
+        redrawAll(strokes);
+        socket.emit(DrawingSocketEvents.ADD_STROKE, {
+          payload: { boardId, ...newStroke },
+        });
       },
     });
 
@@ -114,7 +120,7 @@ export function useDrawing() {
     clearStrokes();
     workerRef?.postMessage({ clear: true });
 
-    socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES, boardId);
+    socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES, { payload: { boardId } });
 
     pushAction({
       type: 'clearAll',
@@ -124,14 +130,13 @@ export function useDrawing() {
         });
         redrawAll(previousStrokes);
         socket.emit(DrawingSocketEvents.UNDO_CLEAR_ALL, {
-          boardId,
-          strokes: previousStrokes,
+          payload: { boardId, strokes: previousStrokes },
         });
       },
       redo: () => {
         clearStrokes();
         redrawAll([]);
-        socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES, boardId);
+        socket.emit(DrawingSocketEvents.REMOVE_ALL_STROKES, { payload: { boardId } });
       },
     });
   };
@@ -142,8 +147,8 @@ export function useDrawing() {
     clearHistory();
     workerRef?.postMessage({ clear: true });
     if (broadcast) {
-      socket.emit(NotesSocketEvents.REMOVE_ALL, boardId);
-      socket.emit(DrawingSocketEvents.REMOVE_ALL, boardId);
+      socket.emit(NotesSocketEvents.REMOVE_ALL, { payload: { boardId } });
+      socket.emit(DrawingSocketEvents.REMOVE_ALL, { payload: { boardId } });
     }
   };
 

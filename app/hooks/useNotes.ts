@@ -11,12 +11,11 @@ import { Note } from '../types/notes';
 
 export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const { tool, setTool } = useToolbarStore();
-  const {
-    addNote,
-    removeNote: removeStoreNote,
-    updateNote: updateStoreNote,
-    removeAllNotes: removeAllStoreNotes,
-  } = useNoteStore();
+  const addStoreNote = useNoteStore((state) => state.addNote);
+  const removeStoreNote = useNoteStore((state) => state.removeNote);
+  const updateStoreNote = useNoteStore((state) => state.updateNote);
+  const removeAllStoreNotes = useNoteStore((state) => state.removeAllNotes);
+
   const { boardId, socket } = useSocket();
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -29,26 +28,30 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
     const x = (e.clientX - rect.left).toString();
     const y = (e.clientY - rect.top).toString();
 
-    const newNote = { id: uuidv4(), x, y, width: 200, height: 100, content: '' };
+    const newNote: Note = { id: uuidv4(), x, y, width: 200, height: 100, content: '' };
 
-    addNote({ ...newNote });
-
+    addStoreNote(newNote);
     const snapshot = JSON.parse(JSON.stringify(newNote));
 
     useHistoryStore.getState().pushAction({
-      type: 'note',
+      type: 'note-add',
       payload: snapshot,
       undo: () => {
         removeNote(snapshot.id);
       },
       redo: () => {
         const note = JSON.parse(JSON.stringify(snapshot));
-        addNote(note);
-        socket.emit(NotesSocketEvents.ADD, { note: newNote, boardId });
+        addStoreNote(note);
+        socket.emit(NotesSocketEvents.ADD, {
+          payload: { note, boardId },
+        });
       },
     });
 
-    socket.emit(NotesSocketEvents.ADD, { note: newNote, boardId });
+    socket.emit(NotesSocketEvents.ADD, {
+      payload: { note: newNote, boardId },
+    });
+
     setTool('none');
   };
 
@@ -61,30 +64,40 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
 
     updateStoreNote(newNote.id, newNote);
 
-    socket.emit(NotesSocketEvents.UPDATE, { id: newNote.id, note: newNote, boardId });
+    socket.emit(NotesSocketEvents.UPDATE, {
+      payload: { id: newNote.id, note: newNote, boardId },
+    });
 
     useHistoryStore.getState().pushAction({
       type: 'note-update',
       payload: { ...newNote },
       undo: () => {
         updateStoreNote(newNote.id, JSON.parse(JSON.stringify(prevNote)));
-        socket.emit(NotesSocketEvents.UPDATE, { id: prevNote.id, note: prevNote, boardId });
+        socket.emit(NotesSocketEvents.UPDATE, {
+          payload: { id: prevNote.id, note: prevNote, boardId },
+        });
       },
       redo: () => {
         updateStoreNote(newNote.id, JSON.parse(JSON.stringify(newNote)));
-        socket.emit(NotesSocketEvents.UPDATE, { id: newNote.id, note: newNote, boardId });
+        socket.emit(NotesSocketEvents.UPDATE, {
+          payload: { id: newNote.id, note: newNote, boardId },
+        });
       },
     });
   };
 
   const removeNote = (id: string) => {
     removeStoreNote(id);
-    socket.emit(NotesSocketEvents.REMOVE, { id });
+    socket.emit(NotesSocketEvents.REMOVE, {
+      payload: { id, boardId },
+    });
   };
 
   const removeAllNotes = () => {
     removeAllStoreNotes();
-    socket.emit(NotesSocketEvents.REMOVE_ALL, boardId);
+    socket.emit(NotesSocketEvents.REMOVE_ALL, {
+      payload: boardId,
+    });
   };
 
   return { handleCanvasClick, updateNote, removeNote, removeAllNotes };

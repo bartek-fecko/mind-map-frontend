@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Note } from '../types/notes';
+
 type NoteStore = {
   notes: Note[];
   editModeNoteId: string | null;

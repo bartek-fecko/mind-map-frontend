@@ -1,18 +1,29 @@
+import { ButtonHTMLAttributes, ReactNode } from 'react';
 import styles from './Button.module.css';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
-  variant?: 'default' | 'google';
-}
+type ButtonProps = {
+  children: ReactNode;
+  variant?: 'primary' | 'secondary' | 'google';
+  className?: string;
+} & ButtonHTMLAttributes<HTMLButtonElement>;
 
-const Button: React.FC<ButtonProps> = ({ children, className = '', variant = 'default', ...props }) => {
-  const variantClass = variant === 'google' ? styles.google : '';
+export default function Button({
+  children,
+  variant = 'primary',
+  className = '',
+  ...props
+}: ButtonProps) {
+  let variantClass = styles.button;
+
+  if (variant === 'secondary') {
+    variantClass = styles['button-secondary'];
+  } else if (variant === 'google') {
+    variantClass = `${styles.button} ${styles.google}`;
+  }
 
   return (
-    <button className={`${className} ${styles.button} ${variantClass}`} {...props}>
+    <button {...props} className={`${variantClass} ${className}`}>
       {children}
     </button>
   );
-};
-
-export default Button;
+}

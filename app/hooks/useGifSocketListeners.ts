@@ -8,6 +8,7 @@ export const useGifSocketListeners = () => {
 
   const setGifs = useGifStore((state) => state.setGifs);
   const addGif = useGifStore((state) => state.addGif);
+  const updateGif = useGifStore((state) => state.updateGif);
   const removeGif = useGifStore((state) => state.removeGif);
 
   useEffect(() => {
@@ -21,6 +22,10 @@ export const useGifSocketListeners = () => {
       addGif(gif);
     });
 
+    socket.on(GifsSocketEvents.UPDATE_GIF, (gif: GifItem) => {
+      updateGif(gif.id, gif);
+    });
+
     socket.on(GifsSocketEvents.REMOVE_GIF, (gifId: string) => {
       removeGif(gifId);
     });
@@ -28,6 +33,7 @@ export const useGifSocketListeners = () => {
     return () => {
       socket.off(GifsSocketEvents.LOAD_GIFS);
       socket.off(GifsSocketEvents.ADD_GIF);
+      socket.off(GifsSocketEvents.UPDATE_GIF);
       socket.off(GifsSocketEvents.REMOVE_GIF);
     };
   }, [socket]);

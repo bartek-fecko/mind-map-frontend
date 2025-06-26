@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useDrawingStore } from '../../store/useDrawingStore';
-import { useDebounce } from '../../utils/useDebounce';
+import useDebounce from '@/app/utils/useDebounce';
 
 export default function ColorPicker() {
   const { setStrokeColor } = useDrawingStore();

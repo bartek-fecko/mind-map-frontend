@@ -14,7 +14,7 @@ export const useNoteSocketListeners = () => {
   const removeAllNotes = useNoteStore((state) => state.removeAllNotes);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !boardId) return;
 
     socket?.on(NotesSocketEvents.GET_ALL, (notes: Note[]) => {
       setNotes(notes);
@@ -43,5 +43,5 @@ export const useNoteSocketListeners = () => {
       socket?.off(NotesSocketEvents.UPDATE);
       socket?.off(NotesSocketEvents.REMOVE_ALL);
     };
-  }, [addNote, removeNote, socket, updateNote, setNotes, removeAllNotes]);
+  }, [addNote, removeNote, socket, boardId, updateNote, setNotes, removeAllNotes]);
 };

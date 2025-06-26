@@ -27,7 +27,7 @@ export default function DrawingSettingsModal({ onClose }: DrawingSettingsModalPr
   }, [onClose]);
 
   return (
-    <div ref={modalRef} className="absolute bottom-11 bg-white shadow-xl rounded-xl p-4 z-50">
+    <div ref={modalRef} className="absolute bottom-11 bg-white bg-shadow-lg rounded-xl p-4 z-50">
       <div className="mb-4">
         <ColorPicker />
       </div>
