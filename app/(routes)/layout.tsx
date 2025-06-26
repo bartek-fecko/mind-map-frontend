@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Mind Map - visualize your thoughts',
+  title: 'Mind Map - Visualize Your Thoughts',
   description: 'Create anything you imagine',
 };
 
