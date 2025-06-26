@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
       'media3.giphy.com',
       'media4.giphy.com',
       'lh3.googleusercontent.com',
+      'mind-map-backend-upzi.onrender.com',
     ],
   },
 };
