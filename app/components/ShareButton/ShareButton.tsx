@@ -25,7 +25,7 @@ const ShareButton = ({ boardId, boardTitle }: ShareButtonProps) => {
       onClick={onShareClick}
     >
       <ShareIcon width={18} height={18} />
-      Share
+      Udostępnij
     </button>
   );
 };

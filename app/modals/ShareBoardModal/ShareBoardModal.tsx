@@ -118,7 +118,7 @@ export default function ShareBoardModal({ id, title, onClose }: ShareBoardModalP
   const skeletonRows = Array(1).fill(0);
 
   return (
-    <Modal title={`Udostepnij ${title} board`} wrapperClassName="flex flex-col max-h-[450px]" onClose={onClose}>
+    <Modal title={`Udostepnij tablicę ${title}`} wrapperClassName="flex flex-col max-h-[450px]" onClose={onClose}>
       <div className="mb-4">
         <SearchInput
           value={searchTerm}
@@ -191,8 +191,8 @@ export default function ShareBoardModal({ id, title, onClose }: ShareBoardModalP
                     <Select
                       options={[
                         { label: 'Admin', value: 'admin' },
-                        { label: 'Viewer', value: 'viewer' },
-                        { label: 'Editor', value: 'editor' },
+                        { label: 'Oglądający', value: 'viewer' },
+                        { label: 'Edytujący', value: 'editor' },
                       ]}
                       value={userRoles[user.id] || 'viewer'}
                       onChange={(e) => handleRoleChange(user.id, e.target.value)}

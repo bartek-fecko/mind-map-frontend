@@ -28,7 +28,7 @@ import { useEffect, useRef } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $generateNodesFromDOM } from '@lexical/html';
 
-const placeholder = 'Enter some rich text...';
+const placeholder = 'Dodaj treść notatki...';
 
 const removeStylesExportDOM = (editor: LexicalEditor, target: LexicalNode): DOMExportOutput => {
   const output = target.exportDOM(editor);
