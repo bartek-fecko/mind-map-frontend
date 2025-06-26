@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prepare": "husky install",
+    "prepare": "husky",
     "preinstall": "npm config set legacy-peer-deps true",
     "dev": "next dev --turbopack",
     "build": "next build",
