@@ -1,5 +1,5 @@
 import { Board } from '@/app/types/board';
-import SearchInput from '../../Input/SearchInput';
+// import SearchInput from '../../Input/SearchInput';
 import ShareButton from '../../ShareButton/ShareButton';
 import styles from '../Header.module.css';
 import NotificationInfo from '../NotificationsInfo';
@@ -27,7 +27,7 @@ const BoardsHeader = ({ board }: BoardsHeaderProps) => {
 
       {/* Right Section */}
       <div className="flex items-center space-x-4">
-        <SearchInput />
+        {/* <SearchInput value="" onChange={() => {}} /> */}
         <ShareButton boardId={board.id} boardTitle={board.title} />
         <NotificationInfo />
         <UserInfo />

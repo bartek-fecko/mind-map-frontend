@@ -5,7 +5,6 @@ import { useHistoryStore } from '../../store/useHistoryStore';
 import { useEffect, useState } from 'react';
 import { useDrawing } from '../../hooks/useDrawing';
 import EmojiPicker from '../EmojiPicker/EmojiPicker';
-import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import GifSearchWrapper from '../GifSearch/GifSearchWrapper';
 import { useGifStore } from '../../store/useGifStore';
 import { ToolbarIcons as Icon } from './icons/ToolbarIcons';
@@ -13,6 +12,7 @@ import DrawingSettingsModal from './components/DrawingSettingsModal';
 import { useAlertStore } from '@/app/store/useAlertStore';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
+import { useModalStore } from '@/app/store/modalStore';
 import { useBoard } from '@/app/hooks/useBoard';
 
 export default function Toolbar() {
@@ -30,13 +30,15 @@ export default function Toolbar() {
   const { clearAllDrawings } = useDrawing();
   const gifSearchVisible = useGifStore((state) => state.gifSearchVisible);
   const toggleGifSearch = useGifStore((state) => state.toggleGifSearch);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const { removeBoardAllContent } = useBoard();
+  const openModal = useModalStore((state) => state.openModal);
+  const closeModal = useModalStore((state) => state.closeModal);
+
+  const { clearAllBoard } = useBoard();
 
   const clearBoard = () => {
-    removeBoardAllContent();
-    setShowClearConfirm(false);
+    clearAllBoard();
+    closeModal();
   };
 
   useEffect(() => {
@@ -65,18 +67,9 @@ export default function Toolbar() {
         {showSettings && <DrawingSettingsModal onClose={() => setShowSettings(false)} />}
         <Icon name="prev" onClick={undo} disabled={isUndoStackEmpty} />
         <Icon name="redo" onClick={redo} disabled={isRedoStackEmpty} />
-        <Icon name="clear" onClick={() => setShowClearConfirm(true)} />
+        <Icon name="clear" onClick={() => openModal('clearBoard', { clearBoard })} />
       </ul>
 
-      {showClearConfirm && (
-        <ConfirmModal
-          message="Czy na pewno chcesz wyczyścić cały board?"
-          onConfirm={clearBoard}
-          onCancel={() => setShowClearConfirm(false)}
-          confirmText="Wyczyść"
-          cancelText="Anuluj"
-        />
-      )}
       {gifSearchVisible && <GifSearchWrapper />}
     </>
   );

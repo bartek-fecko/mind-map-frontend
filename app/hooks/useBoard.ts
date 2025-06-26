@@ -20,7 +20,7 @@ export function useBoard() {
   const workerRef = useDrawingStore((s) => s.workerRef);
   const addAlert = useAlertStore((state) => state.addAlert);
 
-  const removeBoardAllContent = () => {
+  const clearAllBoard = () => {
     if (!socket || !boardId) return;
 
     socket.emit(BoardSocketEvents.REMOVE_BOARD_ALL_CONTENT, {
@@ -52,5 +52,5 @@ export function useBoard() {
     };
   }, [socket, workerRef, removeAllNotes, removeAllDrawings, removeAllGifs]);
 
-  return { removeBoardAllContent };
+  return { clearAllBoard };
 }

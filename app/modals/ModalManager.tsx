@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 const ShareBoardModal = dynamic(() => import('./ShareBoardModal/ShareBoardModal'), { ssr: false });
 const CreateBoardModal = dynamic(() => import('./CreateBoardModal/CreateBoardModal'), { ssr: false });
 const DeleteBoardModal = dynamic(() => import('./DeleteBoardModal/DeleteBoardModal'), { ssr: false });
+const ClearBoardModal = dynamic(() => import('./ClearBoardModal/ClearBoardModal'), { ssr: false });
 
 export default function ModalManager() {
   const { modalType, modalProps, closeModal } = useModalStore();
@@ -20,6 +21,8 @@ export default function ModalManager() {
       return <ShareBoardModal {...(modalProps as any)} onClose={closeModal} />;
     case 'deleteBoard':
       return <DeleteBoardModal {...(modalProps as any)} onClose={closeModal} />;
+    case 'clearBoard':
+      return <ClearBoardModal {...(modalProps as any)} onClose={closeModal} />;
 
     default:
       return null;
