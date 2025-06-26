@@ -8,7 +8,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint-staged": "lint-staged",
+    "format": "prettier --check ."
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
