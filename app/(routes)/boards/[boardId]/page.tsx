@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { SocketProvider } from '@/app/providers/SocketProvider';
 import Toolbar from '../../../components/Toolbar/Toolbar';
-import Board from '../Board';
+import Board from './Board';
 import styles from './MindMap.module.css';
 import { Board as IBoard } from '@/app/types/board';
 import { getSessionServer } from '@/lib/auth';
