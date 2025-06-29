@@ -4,7 +4,7 @@ import { GifsSocketEvents } from '../types/socketEvents';
 import { GifItem, useGifStore } from '../store/useGifStore';
 
 export const useGifSocketListeners = () => {
-  const { socket } = useSocket();
+  const { socket, boardId } = useSocket();
 
   const setGifs = useGifStore((state) => state.setGifs);
   const addGif = useGifStore((state) => state.addGif);
@@ -12,29 +12,26 @@ export const useGifSocketListeners = () => {
   const removeGif = useGifStore((state) => state.removeGif);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !boardId) return;
 
-    socket.on(GifsSocketEvents.LOAD_GIFS, (gifs: GifItem[]) => {
+    const handleLoadGifs = (gifs: GifItem[]) => {
       setGifs(gifs);
-    });
+    };
 
-    socket.on(GifsSocketEvents.ADD_GIF, (gif: GifItem) => {
-      addGif(gif);
-    });
-
-    socket.on(GifsSocketEvents.UPDATE_GIF, (gif: GifItem) => {
-      updateGif(gif.id, gif);
-    });
-
-    socket.on(GifsSocketEvents.REMOVE_GIF, (gifId: string) => {
-      removeGif(gifId);
-    });
+    socket.on(GifsSocketEvents.LOAD_GIFS, handleLoadGifs);
+    socket.on(GifsSocketEvents.ADD_GIF, addGif);
+    socket.on(GifsSocketEvents.UPDATE_GIF, (gif: GifItem) => updateGif(gif.id, gif));
+    socket.on(GifsSocketEvents.REMOVE_GIF, removeGif);
 
     return () => {
-      socket.off(GifsSocketEvents.LOAD_GIFS);
-      socket.off(GifsSocketEvents.ADD_GIF);
+      socket.off(GifsSocketEvents.LOAD_GIFS, handleLoadGifs);
+      socket.off(GifsSocketEvents.ADD_GIF, addGif);
       socket.off(GifsSocketEvents.UPDATE_GIF);
       socket.off(GifsSocketEvents.REMOVE_GIF);
     };
-  }, [socket]);
+  }, [socket, boardId, setGifs, addGif, updateGif, removeGif]);
+
+  useEffect(() => {
+    socket.emit(GifsSocketEvents.LOAD_GIFS, { payload: { boardId } });
+  }, [socket, boardId]);
 };

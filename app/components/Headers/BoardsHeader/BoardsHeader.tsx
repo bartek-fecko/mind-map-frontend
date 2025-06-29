@@ -5,6 +5,7 @@ import styles from '../Header.module.css';
 import NotificationInfo from '../NotificationsInfo';
 import UserInfo from '../UserInfo';
 import Link from 'next/link';
+import LogoIcon from '../../Icons/LogoIcon';
 
 interface BoardsHeaderProps {
   board: Board;
@@ -15,8 +16,8 @@ const BoardsHeader = ({ board }: BoardsHeaderProps) => {
     <header className={`${styles.header} w-screen bg-bg-primary`}>
       {/* Left Section */}
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-primary-base rounded-lg flex items-center justify-center text-white font-bold text-[16px]">
-          M
+        <div className="flex items-center justify-center text-white">
+          <LogoIcon />
         </div>
         <div className="flex items-center space-x-1">
           <Link href="/">

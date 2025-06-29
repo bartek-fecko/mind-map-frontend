@@ -1,4 +1,3 @@
-
 .editor-container {
   border-radius: 2px;
   height: 100%;
@@ -181,21 +180,21 @@
 
 .editor-heading-h1 {
   font-size: 24px;
-  color: rgb(5, 5, 5);
   font-weight: 400;
   margin: 0;
   margin-bottom: 12px;
-  padding: 0;
 }
 
 .editor-heading-h2 {
-  font-size: 15px;
-  color: rgb(101, 103, 107);
-  font-weight: 700;
+  font-size: 20px;
   margin: 0;
-  margin-top: 10px;
-  padding: 0;
-  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.editor-heading-h3 {
+  font-size: 18px;
+  margin: 0;
+  margin-bottom: 12px;
 }
 
 .editor-quote {
@@ -215,10 +214,16 @@
   margin-left: 16px;
 }
 
-.editor-list-ul {
+.editor-list-ul,
+.editor-list-ol {
   padding: 0;
   margin: 0;
   margin-left: 16px;
+  list-style: initial;
+}
+
+.editor-list-ol {
+  list-style: decimal;
 }
 
 .editor-listitem {
@@ -381,7 +386,7 @@ i.italic {
 
 i.underline {
   background-image: url(/icons/type-underline.svg);
-} 
+}
 
 i.strikethrough {
   background-image: url(/icons/type-strikethrough.svg);

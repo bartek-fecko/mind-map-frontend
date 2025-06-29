@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Button from '../../components/Button/Button';
 import GoogleLogin from '../../components/GoogleLogin/GoogleLogin';
 import { redirect } from 'next/navigation';
-import Input from '../../components/Input/Input';
+import Input from '../../components/Inputs/Input';
 import Link from '../../components/Link/Link';
 import { useAlertStore } from '../../store/useAlertStore';
 

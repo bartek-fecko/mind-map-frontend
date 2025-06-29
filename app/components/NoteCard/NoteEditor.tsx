@@ -19,6 +19,7 @@ import {
   ParagraphNode,
   TextNode,
 } from 'lexical';
+import { ListNode, ListItemNode } from '@lexical/list';
 import './styles.css';
 
 import ExampleTheme from './ExampleTheme';
@@ -27,6 +28,8 @@ import { parseAllowedColor, parseAllowedFontSize } from './styleConfig';
 import { useEffect, useRef } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $generateNodesFromDOM } from '@lexical/html';
+import { HeadingNode } from '@lexical/rich-text';
+import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 
 const placeholder = 'Dodaj treść notatki...';
 
@@ -41,12 +44,16 @@ const removeStylesExportDOM = (editor: LexicalEditor, target: LexicalNode): DOME
 
       const style = el.getAttribute('style');
       if (style) {
-        const textAlignStyle = style
+        const allowedStyles = style
           .split(';')
-          .filter((s) => s.trim().startsWith('text-align'))
+          .filter((s) => {
+            const trimmed = s.trim();
+            return trimmed.startsWith('text-align') || trimmed.startsWith('color');
+          })
           .join(';');
-        if (textAlignStyle) {
-          el.setAttribute('style', textAlignStyle);
+
+        if (allowedStyles) {
+          el.setAttribute('style', allowedStyles);
         } else {
           el.removeAttribute('style');
         }
@@ -157,7 +164,7 @@ const editorConfig = {
     import: constructImportMap(),
   },
   namespace: 'Mind Map',
-  nodes: [ParagraphNode, TextNode],
+  nodes: [ParagraphNode, TextNode, HeadingNode, ListNode, ListItemNode],
   onError(error: Error) {
     throw error;
   },
@@ -168,6 +175,7 @@ export default function NoteEditor({ id, content, onSave, onCancel }: NoteEditor
   return (
     <LexicalComposer initialConfig={editorConfig} key={id}>
       <LoadInitialHtml html={content} />
+      <ListPlugin />
       <div className="editor-container">
         <ToolbarPlugin onSave={onSave} onCancel={onCancel} />
         <div className="editor-inner">

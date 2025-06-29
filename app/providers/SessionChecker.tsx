@@ -4,13 +4,13 @@ import { useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 
 export default function SessionChecker() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     if (session?.error === 'TokenExpired') {
       signOut({ callbackUrl: '/login' });
     }
-  }, [session]);
+  }, [session, status]);
 
   return null;
 }

@@ -5,7 +5,7 @@ import { useAlertStore } from '@/app/store/useAlertStore';
 import { fetchWithToken } from '@/lib/api';
 import Button from '@/app/components/Button/Button';
 import { useState } from 'react';
-import Input from '@/app/components/Input/Input';
+import Input from '@/app/components/Inputs/Input';
 import Image from 'next/image';
 import { ImagePlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';

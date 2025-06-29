@@ -9,68 +9,70 @@ export const useDrawingSocketListeners = () => {
   const addStroke = useDrawingStore((s) => s.addStroke);
   const removeStroke = useDrawingStore((s) => s.removeStroke);
   const clearStrokes = useDrawingStore((s) => s.clearStrokes);
+  const getStrokes = useDrawingStore.getState;
   const { isRedrawing, workerRef, redrawAll } = useDrawing();
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !boardId) return;
 
-    socket.on(DrawingSocketEvents.LOAD_DRAWING, (payload: { boardId: number; strokes: Stroke[] }) => {
+    const handleLoadDrawing = (payload: { boardId: number; strokes: Stroke[] }) => {
       if (boardId !== payload.boardId) return;
       clearStrokes();
       redrawAll(payload.strokes);
       payload.strokes.forEach((stroke) => addStroke(stroke));
-    });
+    };
 
-    socket.on(DrawingSocketEvents.ADD_STROKE, (payload: { boardId: number; stroke: Stroke }) => {
-      if (isRedrawing) return;
-      if (payload.boardId !== boardId) return;
+    const handleAddStroke = (payload: { boardId: number; stroke: Stroke }) => {
+      if (isRedrawing || payload.boardId !== boardId) return;
 
-      const exists = useDrawingStore.getState().strokes.find((s) => s.id === payload.stroke.id);
+      const exists = getStrokes().strokes.find((s) => s.id === payload.stroke.id);
       if (exists) return;
 
       addStroke(payload.stroke);
       workerRef?.postMessage({ drawCommands: payload.stroke });
-    });
+    };
 
-    socket.on(DrawingSocketEvents.REMOVE_STROKE, (payload: { boardId: number; strokeId: string }) => {
-      if (isRedrawing) return;
-      if (payload.boardId !== boardId) return;
+    const handleRemoveStroke = (payload: { boardId: number; strokeId: string }) => {
+      if (isRedrawing || payload.boardId !== boardId) return;
 
       removeStroke(payload.strokeId);
-      redrawAll(useDrawingStore.getState().strokes);
-    });
+      redrawAll(getStrokes().strokes);
+    };
 
-    socket.on(DrawingSocketEvents.REMOVE_ALL_STROKES, (payload: { boardId: number }) => {
+    const handleClearAll = (payload: { boardId: number }) => {
       if (payload.boardId !== boardId) return;
 
       clearStrokes();
       workerRef?.postMessage({ clear: true });
       redrawAll([]);
-    });
+    };
 
-    socket.on(DrawingSocketEvents.REMOVE_ALL, (payload: { boardId: number }) => {
-      if (payload.boardId !== boardId) return;
-
-      clearStrokes();
-      workerRef?.postMessage({ clear: true });
-      redrawAll([]);
-    });
-
-    socket.on(DrawingSocketEvents.UNDO_CLEAR_ALL, (payload: { boardId: number; strokes: Stroke[] }) => {
+    const handleUndoClear = (payload: { boardId: number; strokes: Stroke[] }) => {
       if (payload.boardId !== boardId) return;
 
       clearStrokes();
       payload.strokes.forEach((stroke) => addStroke(stroke));
       redrawAll(payload.strokes);
-    });
+    };
+
+    socket.on(DrawingSocketEvents.LOAD_DRAWING, handleLoadDrawing);
+    socket.on(DrawingSocketEvents.ADD_STROKE, handleAddStroke);
+    socket.on(DrawingSocketEvents.REMOVE_STROKE, handleRemoveStroke);
+    socket.on(DrawingSocketEvents.REMOVE_ALL_STROKES, handleClearAll);
+    socket.on(DrawingSocketEvents.REMOVE_ALL, handleClearAll);
+    socket.on(DrawingSocketEvents.UNDO_CLEAR_ALL, handleUndoClear);
 
     return () => {
-      socket.off(DrawingSocketEvents.LOAD_DRAWING);
-      socket.off(DrawingSocketEvents.ADD_STROKE);
-      socket.off(DrawingSocketEvents.REMOVE_STROKE);
-      socket.off(DrawingSocketEvents.REMOVE_ALL_STROKES);
-      socket.off(DrawingSocketEvents.REMOVE_ALL);
-      socket.off(DrawingSocketEvents.UNDO_CLEAR_ALL);
+      socket.off(DrawingSocketEvents.LOAD_DRAWING, handleLoadDrawing);
+      socket.off(DrawingSocketEvents.ADD_STROKE, handleAddStroke);
+      socket.off(DrawingSocketEvents.REMOVE_STROKE, handleRemoveStroke);
+      socket.off(DrawingSocketEvents.REMOVE_ALL_STROKES, handleClearAll);
+      socket.off(DrawingSocketEvents.REMOVE_ALL, handleClearAll);
+      socket.off(DrawingSocketEvents.UNDO_CLEAR_ALL, handleUndoClear);
     };
-  }, [boardId, socket, workerRef, addStroke, removeStroke, clearStrokes, redrawAll, isRedrawing]);
+  }, [boardId, socket, isRedrawing, addStroke, removeStroke, clearStrokes, redrawAll, workerRef]);
+
+  useEffect(() => {
+    socket.emit(DrawingSocketEvents.LOAD_DRAWING, { payload: { boardId } });
+  }, [socket, boardId]);
 };

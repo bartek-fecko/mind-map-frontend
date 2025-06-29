@@ -16,32 +16,26 @@ export const useNoteSocketListeners = () => {
   useEffect(() => {
     if (!socket || !boardId) return;
 
-    socket?.on(NotesSocketEvents.GET_ALL, (notes: Note[]) => {
+    const handleGetAll = (notes: Note[]) => {
       setNotes(notes);
-    });
+    };
 
-    socket?.on(NotesSocketEvents.ADD, (note: Note) => {
-      addNote(note);
-    });
-
-    socket?.on(NotesSocketEvents.REMOVE, (id: string) => {
-      removeNote(id);
-    });
-
-    socket?.on(NotesSocketEvents.UPDATE, (note: Note) => {
-      updateNote(note.id, note);
-    });
-
-    socket?.on(NotesSocketEvents.REMOVE_ALL, () => {
-      removeAllNotes();
-    });
+    socket.on(NotesSocketEvents.GET_ALL, handleGetAll);
+    socket.on(NotesSocketEvents.ADD, addNote);
+    socket.on(NotesSocketEvents.REMOVE, removeNote);
+    socket.on(NotesSocketEvents.UPDATE, (note: Note) => updateNote(note.id, note));
+    socket.on(NotesSocketEvents.REMOVE_ALL, removeAllNotes);
 
     return () => {
-      socket?.off(NotesSocketEvents.GET_ALL);
-      socket?.off(NotesSocketEvents.ADD);
-      socket?.off(NotesSocketEvents.REMOVE);
-      socket?.off(NotesSocketEvents.UPDATE);
-      socket?.off(NotesSocketEvents.REMOVE_ALL);
+      socket.off(NotesSocketEvents.GET_ALL, handleGetAll);
+      socket.off(NotesSocketEvents.ADD, addNote);
+      socket.off(NotesSocketEvents.REMOVE, removeNote);
+      socket.off(NotesSocketEvents.UPDATE);
+      socket.off(NotesSocketEvents.REMOVE_ALL);
     };
-  }, [addNote, removeNote, socket, boardId, updateNote, setNotes, removeAllNotes]);
+  }, [socket, boardId, setNotes, addNote, removeNote, updateNote, removeAllNotes]);
+
+  useEffect(() => {
+    socket.emit(NotesSocketEvents.GET_ALL, { payload: { boardId } });
+  }, [socket, boardId]);
 };

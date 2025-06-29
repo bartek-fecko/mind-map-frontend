@@ -22,18 +22,20 @@ import { useGif } from '@/app/hooks/useGif';
 
 function BoardComponent() {
   const localCanvasRef = useRef<HTMLCanvasElement>(null);
-  const { notes, editModeNoteId } = useNoteStore();
   const emojis = useEmojiStore((s) => s.emojis);
   const updateEmoji = useEmojiStore((s) => s.updateEmoji);
   const gifs = useGifStore((s) => s.gifs);
   const tool = useToolbarStore((s) => s.tool);
   const { boardId, startDraw, draw, stopDraw, clearCanvas } = useDrawing();
+  const clearStrokes = useDrawingStore((state) => state.clearStrokes);
   const clearNotes = useNoteStore((state) => state.removeAllNotes);
-
+  const notes = useNoteStore((state) => state.notes);
+  const editModeNoteId = useNoteStore((state) => state.editModeNoteId);
   const { updateNote } = useNotes(localCanvasRef);
   const { handleCanvasClick: handleNoteClick } = useNotes(localCanvasRef);
   const { handleCanvasClick: handleEmojiClick } = useEmoji(localCanvasRef);
   const { updateGif } = useGif();
+  const removeAllGifs = useGifStore((state) => state.removeAllGifs);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     handleEmojiClick(e);
@@ -49,6 +51,8 @@ function BoardComponent() {
     return () => {
       clearNotes();
       clearCanvas();
+      clearStrokes();
+      removeAllGifs();
     };
   }, [boardId]);
 
@@ -83,8 +87,8 @@ function BoardComponent() {
             width: note.width || 200,
             height: note.height || 150,
           }}
-          minWidth={editModeNoteId === note.id ? 700 : 160}
-          minHeight={editModeNoteId === note.id ? 400 : 160}
+          minWidth={editModeNoteId === note.id ? 990 : 160}
+          minHeight={editModeNoteId === note.id ? 600 : 160}
           onUpdate={(id, updates) => {
             if (editModeNoteId === note.id) return;
             updateNote({

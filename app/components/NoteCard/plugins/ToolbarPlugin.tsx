@@ -1,14 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
+
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { mergeRegister } from '@lexical/utils';
 import {
+  $createParagraphNode,
   $getSelection,
   $isRangeSelection,
   CAN_REDO_COMMAND,
@@ -19,9 +15,13 @@ import {
   SELECTION_CHANGE_COMMAND,
   UNDO_COMMAND,
 } from 'lexical';
+import { $patchStyleText, $setBlocksType } from '@lexical/selection';
+import { $createHeadingNode, HeadingTagType } from '@lexical/rich-text';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { $generateHtmlFromNodes } from '@lexical/html';
-
+import Button from '../../Button/Button';
+import { Heading1, Heading2, Heading3, List, ListOrdered, TypeOutline } from 'lucide-react';
+import { INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND } from '@lexical/list';
 const LowPriority = 1;
 
 function Divider() {
@@ -44,10 +44,35 @@ export default function ToolbarPlugin({
   const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
 
+  const applyColor = (editor: any, color: string) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $patchStyleText(selection, { color });
+      }
+    });
+  };
+
+  const formatParagraph = (editor: any) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $setBlocksType(selection, () => $createParagraphNode());
+      }
+    });
+  };
+  const formatHeading = (editor: any, tag: HeadingTagType) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $setBlocksType(selection, () => $createHeadingNode(tag));
+      }
+    });
+  };
+
   const $updateToolbar = useCallback(() => {
     const selection = $getSelection();
     if ($isRangeSelection(selection)) {
-      // Update text format
       setIsBold(selection.hasFormat('bold'));
       setIsItalic(selection.hasFormat('italic'));
       setIsUnderline(selection.hasFormat('underline'));
@@ -111,7 +136,9 @@ export default function ToolbarPlugin({
       >
         <i className="format redo" />
       </button>
+
       <Divider />
+
       <button
         onClick={() => {
           editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
@@ -148,7 +175,41 @@ export default function ToolbarPlugin({
       >
         <i className="format strikethrough" />
       </button>
+      <input
+        type="color"
+        onChange={(e) => applyColor(editor, e.target.value)}
+        className="toolbar-item w-4 h-4 p-0 border-none rounded-sm bg-transparent cursor-pointer mt-[2px]"
+      />
+
       <Divider />
+
+      <button
+        onClick={() => formatHeading(editor, 'h1')}
+        className="toolbar-item spaced mt-[2px]"
+        aria-label="Heading 1"
+      >
+        <Heading1 className="opacity-60" width={18} height={18} />
+      </button>
+      <button
+        onClick={() => formatHeading(editor, 'h2')}
+        className="toolbar-item spaced mt-[2px]"
+        aria-label="Heading 2"
+      >
+        <Heading2 className="opacity-60" width={18} height={18} />
+      </button>
+      <button
+        onClick={() => formatHeading(editor, 'h3')}
+        className="toolbar-item spaced mt-[2px]"
+        aria-label="Heading 3"
+      >
+        <Heading3 className="opacity-60" width={18} height={18} />
+      </button>
+      <button onClick={() => formatParagraph(editor)} className="toolbar-item spaced mt-[2px]" aria-label="Paragraph">
+        <TypeOutline className="opacity-60" width={16} height={16} />
+      </button>
+
+      <Divider />
+
       <button
         onClick={() => {
           editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left');
@@ -185,26 +246,37 @@ export default function ToolbarPlugin({
       >
         <i className="format justify-align" />
       </button>
-      <Divider />
       <button
         onClick={() => {
-          onCancel();
+          editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
         }}
-        className="cursor-pointer px-3 py-1 rounded bg-gray-400 text-white font-medium hover:bg-gray-500 transition shadow-md relative z-10"
+        className="toolbar-item spaced"
+        aria-label="Unordered List"
       >
-        Anuluj
+        <List className="opacity-60 mt-[1px]" width={18} height={18} />
       </button>
       <button
+        onClick={() => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)}
+        className="toolbar-item spaced"
+        aria-label="Ordered List"
+      >
+        <ListOrdered className="opacity-60" width={16} height={16} />
+      </button>
+
+      <Divider />
+      <Button variant="secondary" onClick={onCancel}>
+        Anuluj
+      </Button>
+      <Button
         onClick={() => {
           editor.getEditorState().read(() => {
             const html = $generateHtmlFromNodes(editor, null);
             onSave(html);
           });
         }}
-        className="cursor-pointer px-3 py-1 hover rounded bg-blue-700 text-white font-medium hover:bg-blue-800 transition shadow-md relative z-10"
       >
         Zapisz
-      </button>{' '}
+      </Button>
     </div>
   );
 }

@@ -1,16 +1,14 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Socket } from 'socket.io-client';
-import { getSocketSingleton } from './SocketSingleton';
-import { QueueOfflineEvent } from '../types/queueOfflineEvent';
-import { DrawingSocketEvents, GifsSocketEvents, NotesSocketEvents } from '../types/socketEvents';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { Session } from 'next-auth';
+import { GlobalSocketEvents } from '../types/socketEvents';
+import { useAlertStore } from '../store/useAlertStore';
 
 type SocketContextType = {
   socket: Socket;
   boardId: number;
-  queueOfflineEvent: (event: QueueOfflineEvent) => void;
 };
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -25,39 +23,35 @@ export const SocketProvider = ({
   session: Session;
 }) => {
   const [socket, setSocket] = useState<Socket>();
-  const offlineEventQueue = useRef<QueueOfflineEvent[]>([]);
+  const addAlert = useAlertStore((state) => state.addAlert);
 
   useEffect(() => {
     if (!session || !boardId) return;
 
-    const token = session?.backendTokens?.accessToken;
-    const initSocket = getSocketSingleton(token);
+    const token = session.backendTokens?.accessToken;
+
+    const initSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+      transports: ['websocket'],
+      auth: { token },
+      withCredentials: true,
+    });
+
     setSocket(initSocket);
 
-    const onConnect = () => {
-      initSocket.emit(NotesSocketEvents.GET_ALL, { payload: { boardId } });
-      initSocket.emit(DrawingSocketEvents.LOAD_DRAWING, { payload: { boardId } });
-      initSocket.emit(GifsSocketEvents.LOAD_GIFS, { payload: { boardId } });
-    };
+    initSocket.on('connect_error', (err) => {
+      addAlert('error', `Connection error: ${err}`);
+    });
 
-    initSocket.on('connect', onConnect);
-
-    if (initSocket.connected) {
-      onConnect();
-    }
+    initSocket.on(GlobalSocketEvents.ERROR, (err: string) => {
+      addAlert('error', `Coś poszło nie tak: ${err}`);
+    });
 
     return () => {
-      initSocket.off('connect', onConnect);
+      initSocket.disconnect();
     };
   }, [boardId, session]);
 
-  const queueOfflineEvent = (event: QueueOfflineEvent) => {
-    offlineEventQueue.current.push(event);
-  };
-
-  return (
-    <SocketContext.Provider value={{ socket: socket!, boardId, queueOfflineEvent }}>{children}</SocketContext.Provider>
-  );
+  return <SocketContext.Provider value={{ socket: socket!, boardId }}>{children}</SocketContext.Provider>;
 };
 
 export const useSocket = () => {

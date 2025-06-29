@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Modal from '../Modal';
-import SearchInput from '@/app/components/Input/SearchInput';
-import Select from '@/app/components/Input/Select';
-import Checkbox from '@/app/components/Input/Checkbox';
+import SearchInput from '@/app/components/Inputs/SearchInput';
+import Select from '@/app/components/Inputs/Select';
+import Checkbox from '@/app/components/Inputs/Checkbox';
 import Image from 'next/image';
 import { useAlertStore } from '@/app/store/useAlertStore';
 import { User } from '@/app/types/user';

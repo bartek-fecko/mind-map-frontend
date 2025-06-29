@@ -7,7 +7,7 @@ function SuccessIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
+      strokeWidth="2"
       strokeLinejoin="round"
       strokeLinecap="round"
     >
