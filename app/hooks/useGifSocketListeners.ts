@@ -32,6 +32,7 @@ export const useGifSocketListeners = () => {
   }, [socket, boardId, setGifs, addGif, updateGif, removeGif]);
 
   useEffect(() => {
+    if (!socket || !boardId) return;
     socket.emit(GifsSocketEvents.LOAD_GIFS, { payload: { boardId } });
   }, [socket, boardId]);
 };

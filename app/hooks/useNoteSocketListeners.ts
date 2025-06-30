@@ -36,6 +36,7 @@ export const useNoteSocketListeners = () => {
   }, [socket, boardId, setNotes, addNote, removeNote, updateNote, removeAllNotes]);
 
   useEffect(() => {
+    if (!socket || !boardId) return;
     socket.emit(NotesSocketEvents.GET_ALL, { payload: { boardId } });
   }, [socket, boardId]);
 };

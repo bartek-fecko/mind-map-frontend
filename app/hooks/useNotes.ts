@@ -11,6 +11,7 @@ import { Note } from '../types/notes';
 
 export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const { tool, setTool } = useToolbarStore();
+  const notes = useNoteStore((state) => state.notes);
   const addStoreNote = useNoteStore((state) => state.addNote);
   const removeStoreNote = useNoteStore((state) => state.removeNote);
   const updateStoreNote = useNoteStore((state) => state.updateNote);
@@ -28,7 +29,9 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
     const x = (e.clientX - rect.left).toString();
     const y = (e.clientY - rect.top).toString();
 
-    const newNote: Note = { id: uuidv4(), x, y, width: 200, height: 100, content: '' };
+    const maxZIndex = notes.reduce((max, note) => Math.max(max, note.zIndex || 0), 0);
+
+    const newNote: Note = { id: uuidv4(), x, y, width: 200, height: 100, content: '', zIndex: maxZIndex + 1 };
 
     addStoreNote(newNote);
     const snapshot = JSON.parse(JSON.stringify(newNote));
@@ -86,6 +89,36 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
     });
   };
 
+  const increaseZIndex = (id: string) => {
+    return new Promise<void>((resolve) => {
+      socket.emit(
+        NotesSocketEvents.INCREASE_Z_INDEX,
+        {
+          payload: {
+            id,
+            boardId,
+          },
+        },
+        () => resolve(),
+      );
+    });
+  };
+
+  const decreaseZIndex = (id: string) => {
+    return new Promise<void>((resolve) => {
+      socket.emit(
+        NotesSocketEvents.DECREASE_Z_INDEX,
+        {
+          payload: {
+            id,
+            boardId,
+          },
+        },
+        () => resolve(),
+      );
+    });
+  };
+
   const removeNote = (id: string) => {
     removeStoreNote(id);
     socket.emit(NotesSocketEvents.REMOVE, {
@@ -100,5 +133,5 @@ export function useNotes(canvasRef: RefObject<HTMLCanvasElement | null>) {
     });
   };
 
-  return { handleCanvasClick, updateNote, removeNote, removeAllNotes };
+  return { handleCanvasClick, updateNote, increaseZIndex, decreaseZIndex, removeNote, removeAllNotes };
 }

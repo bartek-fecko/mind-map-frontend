@@ -5,4 +5,5 @@ export type Note = {
   width: number;
   height: number;
   content: string;
+  zIndex: number;
 };

@@ -73,6 +73,7 @@ export const useDrawingSocketListeners = () => {
   }, [boardId, socket, isRedrawing, addStroke, removeStroke, clearStrokes, redrawAll, workerRef]);
 
   useEffect(() => {
+    if (!socket || !boardId) return;
     socket.emit(DrawingSocketEvents.LOAD_DRAWING, { payload: { boardId } });
   }, [socket, boardId]);
 };

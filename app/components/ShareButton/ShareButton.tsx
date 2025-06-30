@@ -14,7 +14,7 @@ const ShareButton = ({ boardId, boardTitle }: ShareButtonProps) => {
 
   function onShareClick(e: MouseEvent) {
     e.stopPropagation();
-    openModal('shareBoard', { boardId, boardTitle });
+    openModal('shareBoard', { id: boardId, title: boardTitle });
   }
 
   return (

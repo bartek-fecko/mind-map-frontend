@@ -1,4 +1,5 @@
 'use client';
+
 import { memo, useEffect, useRef, useState } from 'react';
 import { useDrawing } from '../../../hooks/useDrawing';
 import { useNoteStore } from '../../../store/useNoteStore';
@@ -79,15 +80,15 @@ function BoardComponent() {
       {notes.map((note) => (
         <ResizableCard
           key={note.id}
-          className="z-3"
+          style={{ zIndex: note.zIndex }}
           id={note.id}
           element={{
             x: parseInt(note.x),
             y: parseInt(note.y),
-            width: note.width || 200,
+            width: note.width || 230,
             height: note.height || 150,
           }}
-          minWidth={editModeNoteId === note.id ? 990 : 160}
+          minWidth={editModeNoteId === note.id ? 990 : 230}
           minHeight={editModeNoteId === note.id ? 600 : 160}
           onUpdate={(id, updates) => {
             if (editModeNoteId === note.id) return;

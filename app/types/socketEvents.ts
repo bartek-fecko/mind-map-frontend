@@ -4,7 +4,8 @@ export const NotesSocketEvents = {
   REMOVE: 'notes:remove',
   REMOVE_ALL: 'notes:remove-all',
   UPDATE: 'notes:update',
-  RESTORE: 'notes:restore',
+  INCREASE_Z_INDEX: 'notes:increase-z-index',
+  DECREASE_Z_INDEX: 'notes:decrease-z-index',
 } as const;
 
 export const DrawingSocketEvents = {

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { CSSProperties, ReactNode, useEffect, useState } from 'react';
 import { useDraggableResizable } from '../../hooks/useDraggableResizable';
 
 export interface DraggableElement {
@@ -10,7 +10,7 @@ export interface DraggableElement {
   height: number;
 }
 
-interface Props {
+interface ResizableCardProps {
   id: string;
   element: DraggableElement;
   onUpdate: (id: string, updates: Partial<DraggableElement>) => void;
@@ -19,6 +19,7 @@ interface Props {
   disableInteractions?: boolean;
   minWidth?: number;
   minHeight?: number;
+  style?: CSSProperties;
 }
 
 export default function ResizableCard({
@@ -27,10 +28,11 @@ export default function ResizableCard({
   onUpdate,
   children,
   className,
+  style,
   disableInteractions,
   minWidth = 190,
   minHeight = 160,
-}: Props) {
+}: ResizableCardProps) {
   const [localElement, setLocalElement] = useState(element);
 
   useEffect(() => {
@@ -73,6 +75,7 @@ export default function ResizableCard({
         top: `${localElement.y}px`,
         width: `${localElement.width}px`,
         height: `${localElement.height}px`,
+        ...style,
       }}
     >
       <div className="absolute top-0 left-0 w-full h-5 z-10 cursor-move" onMouseDown={onDragStart} />
@@ -82,23 +85,23 @@ export default function ResizableCard({
         <>
           {/* Resize handles */}
           <div
-            className="absolute w-3 h-3 bg-blue-500 rounded-full cursor-nw-resize opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
-            style={{ top: '-6px', left: '-6px' }}
+            className="absolute w-2 h-2 bg-blue-500 rounded-full cursor-nw-resize opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
+            style={{ top: '-4px', left: '-4px' }}
             onMouseDown={(e) => onResizeStart(e, 'top-left')}
           />
           <div
-            className="absolute w-3 h-3 bg-blue-500 rounded-full cursor-ne-resize opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
-            style={{ top: '-6px', right: '-6px' }}
+            className="absolute w-2 h-2 bg-blue-500 rounded-full cursor-ne-resize opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
+            style={{ top: '-4px', right: '-4px' }}
             onMouseDown={(e) => onResizeStart(e, 'top-right')}
           />
           <div
-            className="absolute w-3 h-3 bg-blue-500 rounded-full cursor-sw-resize opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
-            style={{ bottom: '-6px', left: '-6px' }}
+            className="absolute w-2 h-2 bg-blue-500 rounded-full cursor-sw-resize opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
+            style={{ bottom: '-4px', left: '-4px' }}
             onMouseDown={(e) => onResizeStart(e, 'bottom-left')}
           />
           <div
-            className="absolute w-3 h-3 bg-blue-500 rounded-full cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
-            style={{ bottom: '-6px', right: '-6px' }}
+            className="absolute w-2 h-2 bg-blue-500 rounded-full cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
+            style={{ bottom: '-4px', right: '-4px' }}
             onMouseDown={(e) => onResizeStart(e, 'bottom-right')}
           />
         </>
